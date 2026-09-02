@@ -8,16 +8,219 @@
     <artifactId>GlobalTradeLogistics</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
+    <name>GlobalTrade Logistics Corporation – Enterprise Supply Chain Platform</name>
+    <description>
+        Jakarta EE 10 enterprise supply chain management platform for GlobalTrade Logistics Corporation.
+        Manages freight operations across 50+ countries using EJB 3.2, CDI 4.0, JAX-RS 3.1,
+        JPA 3.0 (Hibernate), Jakarta Security 3.0, and JSP/Bootstrap frontend.
+    </description>
+
+    <!-- Build order: ejb → web → ear (dependencies first) -->
     <modules>
-        <module>globaltrade-ear</module>
         <module>globaltrade-ejb</module>
         <module>globaltrade-web</module>
+        <module>globaltrade-ear</module>
     </modules>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- ── Dependency Versions ── -->
+        <jakartaee.version>10.0.0</jakartaee.version>
+        <hibernate.version>6.4.4.Final</hibernate.version>
+        <mysql.version>8.0.33</mysql.version>
+        <jjwt.version>0.12.6</jjwt.version>
+        <log4j.version>2.23.1</log4j.version>
+        <jbcrypt.version>0.4</jbcrypt.version>
+        <junit.version>5.10.2</junit.version>
+        <mockito.version>5.11.0</mockito.version>
+
+        <!-- ── Plugin Versions ── -->
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <maven.ejb.plugin.version>3.2.1</maven.ejb.plugin.version>
+        <maven.war.plugin.version>3.4.0</maven.war.plugin.version>
+        <maven.ear.plugin.version>3.3.0</maven.ear.plugin.version>
+        <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
+        <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!--  Jakarta EE 10 Full Platform (provided by GlassFish 8)   -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <dependency>
+                <groupId>jakarta.platform</groupId>
+                <artifactId>jakarta.jakartaee-api</artifactId>
+                <version>${jakartaee.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!--  Hibernate ORM 6 — JPA provider bundled in EAR lib       -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>${hibernate.version}</version>
+            </dependency>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!--  MySQL 8 Connector — must be in GlassFish domain/lib     -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!--  JJWT 0.12+ — JWT issued & validated in web module       -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!--  Apache Log4j 2 — enterprise structured logging           -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!--  jBCrypt — secure password hashing (12 rounds)           -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <dependency>
+                <groupId>org.mindrot</groupId>
+                <artifactId>jbcrypt</artifactId>
+                <version>${jbcrypt.version}</version>
+            </dependency>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!--  Testing                                                  -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!--  Internal modules                                         -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <dependency>
+                <groupId>com.globaltrade.logistics</groupId>
+                <artifactId>globaltrade-ejb</artifactId>
+                <version>${project.version}</version>
+                <type>ejb</type>
+            </dependency>
+            <dependency>
+                <groupId>com.globaltrade.logistics</groupId>
+                <artifactId>globaltrade-web</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <source>21</source>
+                        <target>21</target>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+
+                <!-- EJB packaging — produces globaltrade-ejb-1.0.0.jar -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ejb-plugin</artifactId>
+                    <version>${maven.ejb.plugin.version}</version>
+                    <configuration>
+                        <ejbVersion>3.2</ejbVersion>
+                        <generateClient>false</generateClient>
+                    </configuration>
+                </plugin>
+
+                <!-- WAR packaging -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>${maven.war.plugin.version}</version>
+                    <configuration>
+                        <failOnMissingWebXml>false</failOnMissingWebXml>
+                    </configuration>
+                </plugin>
+
+                <!-- EAR packaging — bundles ejb + war + lib JARs -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ear-plugin</artifactId>
+                    <version>${maven.ear.plugin.version}</version>
+                    <configuration>
+                        <!-- Jakarta EE 10 = EAR version 8 -->
+                        <version>8</version>
+                        <!-- All non-module compile-scope JARs go into EAR/lib/ -->
+                        <defaultLibBundleDir>lib</defaultLibBundleDir>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven.resources.plugin.version}</version>
+                    <configuration>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+    </build>
 
 </project>
