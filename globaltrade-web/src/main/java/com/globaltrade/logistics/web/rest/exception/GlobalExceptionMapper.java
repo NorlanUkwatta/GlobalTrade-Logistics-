@@ -120,7 +120,12 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
 
         // ── 7. Catch-all — never expose internals to the client ──────────
         LOG.error("[UNHANDLED-ERROR] Unexpected exception: {}", exception.getMessage(), exception);
-        return systemError("Error: " + exception.getMessage() + (exception.getCause() != null ? " Cause: " + exception.getCause().getMessage() : ""));
+        
+        java.io.StringWriter sw = new java.io.StringWriter();
+        exception.printStackTrace(new java.io.PrintWriter(sw));
+        String stackTrace = sw.toString();
+        
+        return systemError("Error: " + exception.getMessage() + (exception.getCause() != null ? " Cause: " + exception.getCause().getMessage() : "") + " STACK: " + stackTrace);
     }
 
     private Response systemError(String message) {

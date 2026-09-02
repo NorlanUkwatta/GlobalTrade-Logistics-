@@ -28,5 +28,9 @@
         <role-name>CUSTOMER</role-name>
         <group-name>CUSTOMER</group-name>
     </security-role-mapping>
+    <security-role-mapping>
+        <role-name>OPS</role-name>
+        <group-name>OPS</group-name>
+    </security-role-mapping>
     <class-loader delegate="true"/>
 </glassfish-web-app>

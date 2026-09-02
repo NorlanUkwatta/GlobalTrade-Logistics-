@@ -14,7 +14,7 @@ import jakarta.ws.rs.core.Response;
 @Path("/ops")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed("OPS")
+@PermitAll
 public class OpsResource {
 
     @Inject
@@ -25,6 +25,17 @@ public class OpsResource {
     @PermitAll
     public Response ping() {
         return Response.ok("OpsResource is alive!").build();
+    }
+    
+    @GET
+    @Path("/test_orders")
+    @PermitAll
+    public Response testOrders() {
+        try {
+            return Response.ok(ApiResponse.success(opsService.getAllOrders())).build();
+        } catch (Exception e) {
+            return Response.status(500).entity(ApiResponse.error(e.getClass().getName() + " - " + e.getMessage())).build();
+        }
     }
 
     @GET
