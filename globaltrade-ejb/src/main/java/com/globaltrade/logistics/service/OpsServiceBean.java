@@ -35,6 +35,7 @@ public class OpsServiceBean {
         order.setVendor(vendor);
             order.setOpsAssigneeId(opsAssigneeId);
             order.setOpsAssigneeName(opsAssigneeName);
+            order.setVendorDecision(ShippingOrder.VendorDecision.PENDING);
         order.setRouteFrom(vendor.getPickupCity() + ", " + vendor.getPickupCountry());
         
         // Also map the payment to this vendor if it exists
@@ -90,6 +91,7 @@ public class OpsServiceBean {
         }
     }
 }
+
 
 
 

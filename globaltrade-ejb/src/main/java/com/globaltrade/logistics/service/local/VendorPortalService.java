@@ -14,8 +14,10 @@ public interface VendorPortalService {
         ShippingOrder getShippingOrder(Long id, Long vendorId);
     ShippingOrder submitVendorDecision(Long id, ShippingOrder.VendorDecision decision, String reason, String date);
     List<ShippingOrder> getShippingOrders(Long vendorId);
+    ShippingOrder updateOrderStatus(Long id, ShippingOrder.Status status);
 
     List<ReturnedItem> getReturnedItems(Long vendorId);
 }
+
 
 

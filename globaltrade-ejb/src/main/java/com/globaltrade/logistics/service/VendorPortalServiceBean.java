@@ -114,11 +114,20 @@ public class VendorPortalServiceBean implements VendorPortalService {
             order.setVendorDecisionReason(reason);
             order.setVendorProposedDate(date);
             if (decision == ShippingOrder.VendorDecision.ACCEPTED) {
-                order.setStatus(ShippingOrder.Status.IN_WAREHOUSE);
+                order.setStatus(ShippingOrder.Status.IN_PROGRESS);
             } else if (decision == ShippingOrder.VendorDecision.REJECTED) {
                 order.setStatus(ShippingOrder.Status.PENDING);
                 order.setVendor(null); // Unassign the vendor so ops can reassign
             }
+            em.merge(order);
+        }
+        return order;
+    }
+
+        public ShippingOrder updateOrderStatus(Long id, ShippingOrder.Status status) {
+        ShippingOrder order = em.find(ShippingOrder.class, id);
+        if (order != null) {
+            order.setStatus(status);
             em.merge(order);
         }
         return order;
@@ -137,5 +146,7 @@ public class VendorPortalServiceBean implements VendorPortalService {
             .getResultList();
     }
 }
+
+
 
 

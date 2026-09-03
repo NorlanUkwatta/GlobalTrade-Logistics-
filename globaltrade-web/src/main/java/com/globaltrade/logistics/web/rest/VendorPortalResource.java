@@ -143,6 +143,15 @@ public class VendorPortalResource {
     }
 
     @PUT
+    @Path("/orders/{id}/status")
+    @RolesAllowed("VENDOR_REP")
+    public Response updateOrderStatus(@PathParam("id") Long id, Map<String, String> payload) {
+        String newStatus = payload.get("status");
+        ShippingOrder order = vendorPortalService.updateOrderStatus(id, ShippingOrder.Status.valueOf(newStatus));
+        return Response.ok(ApiResponse.success("Order status updated.", order)).build();
+    }
+
+    @PUT
     @Path("/orders/{id}/production")
     @RolesAllowed("VENDOR_REP")
     public Response inProduction(@PathParam("id") Long id) {
@@ -191,6 +200,8 @@ public class VendorPortalResource {
         return Response.ok(ApiResponse.success(returns)).build();
     }
 }
+
+
 
 
 

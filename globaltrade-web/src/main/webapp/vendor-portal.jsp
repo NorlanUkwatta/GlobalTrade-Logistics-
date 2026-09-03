@@ -132,10 +132,7 @@
             </div>
         </div>
         <div class="kanban-board">
-            <div class="kanban-col">
-                <h6 class="fw-bold mb-3"><i class="bi bi-inbox me-2"></i>New Orders (Pending)</h6>
-                <div id="col-pending"></div>
-            </div>
+            
             <div class="kanban-col">
                 <h6 class="fw-bold mb-3"><i class="bi bi-gear me-2"></i>In Production</h6>
                 <div id="col-production"></div>
@@ -423,6 +420,9 @@
 const CTX = '${pageContext.request.contextPath}';
 let asnModalInstance, proposeDateModalInstance, complianceModalInstance;
 let createShippingOrderModalInstance, viewShippingOrderModalInstance;
+let firstVendorLoad = true;
+let knownVendorOrderIds = new Set();
+let vendorPollingInterval = null;
 
 async function apiCall(url, method='GET', bodyData=null) {
     let options = { method, headers: { 'Content-Type': 'application/json' } };
@@ -569,12 +569,12 @@ function renderShippingOrders(orders) {
         const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '';
         tbody.innerHTML += `
             <tr>
-                <td><strong>\${o.orderId}</strong></td>
+                <td><strong>\\${o.orderId}</strong></td>
                 <td>\${date}</td>
-                <td>\${o.customerFullName}</td>
+                <td>\\${o.customerFullName}</td>
                 <td>\${route}</td>
                 <td><span class="badge bg-secondary">\${o.status}</span></td>
-                <td><button class="btn btn-sm btn-outline-primary" onclick="viewShippingOrder('\${o.orderId}')">Details</button></td>
+                <td><button class="btn btn-sm btn-outline-primary" onclick="viewShippingOrder('\\${o.orderId}')">Details</button></td>
             </tr>
         `;
     });
@@ -629,15 +629,15 @@ function renderAssignedOrdersTable() {
         const opsName = o.opsAssigneeName || 'Ops Team';
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><strong>${o.orderId}</strong></td>
-            <td>${o.customerFullName}</td>
-            <td>${o.itemCount || 0}</td>
-            <td><span class="badge bg-secondary">${opsName}</span></td>
+            <td><strong>\${o.orderId}</strong></td>
+            <td>\${o.customerFullName}</td>
+            <td>\${o.itemCount || 0}</td>
+            <td><span class="badge bg-secondary">\${opsName}</span></td>
             <td><span class="badge bg-warning text-dark">PENDING</span></td>
             <td>
-                <button class="btn btn-sm btn-success me-1" onclick="submitDecision('${o.orderId}', 'ACCEPTED')">Confirm</button>
-                <button class="btn btn-sm btn-danger me-1" onclick="promptReject('${o.orderId}')">Cancel</button>
-                <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails('${o.orderId}')">View Details</button>
+                <button class="btn btn-sm btn-success me-1" onclick="submitDecision('\${o.orderId}', 'ACCEPTED')">Confirm</button>
+                <button class="btn btn-sm btn-danger me-1" onclick="promptReject('\${o.orderId}')">Cancel</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails('\${o.orderId}')">View Details</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -680,96 +680,59 @@ function promptReject(orderId) {
 }
 
 function renderKanban(pos) {
-    const colPending = document.getElementById('col-pending');
+    
     const colProduction = document.getElementById('col-production');
     const colReady = document.getElementById('col-ready');
-    colPending.innerHTML = ''; colProduction.innerHTML = ''; colReady.innerHTML = '';
+     
+    colProduction.innerHTML = ''; 
+    colReady.innerHTML = '';
     
     pos.forEach(po => {
+        if (po.vendorDecision === 'PENDING' || po.vendorDecision === 'PROPOSED_DATE' || po.vendorDecision === 'REJECTED') {
+            return; // Handled elsewhere or not active
+        }
+
         let actions = '';
-        let targetCol = 'col-pending';
+        let targetCol = null;
         let cardClass = 'po-card';
         
-        if (po.status === 'PENDING') {
-            actions = `
-                <button class="btn btn-sm btn-success w-100 mb-1" onclick="acknowledgePO(\${po.id})">Accept Order</button>
-                <button class="btn btn-sm btn-outline-danger w-100" onclick="openProposeDate(\${po.id})">Propose New Date</button>
-            `;
-        } else if (po.status === 'ACKNOWLEDGED' || po.status === 'DELAY_REQUESTED') {
+        if (po.status === 'IN_PROGRESS') {
             targetCol = 'col-production';
-            if (po.status === 'DELAY_REQUESTED') cardClass += ' delay';
-            actions = `<button class="btn btn-sm btn-primary w-100" onclick="updatePO(\${po.id}, 'production')">Start Production</button>`;
-        } else if (po.status === 'IN_PRODUCTION') {
-            targetCol = 'col-production';
-            actions = `
-                <button class="btn btn-sm btn-success w-100 mb-2" onclick="openASN(\${po.id})">Fill ASN & Ship</button>
-                <button class="btn btn-sm btn-outline-info w-100" onclick="openComplianceModal()">Compliance Docs</button>
-            `;
-        } else if (po.status === 'READY_FOR_PICKUP') {
+            actions = `<button class="btn btn-sm btn-primary w-100" onclick="updatePOStatus('\${po.id}', 'IN_WAREHOUSE')">Ready for Pickup</button>`;
+        } else if (po.status === 'IN_WAREHOUSE') {
             targetCol = 'col-ready';
             cardClass += ' ready';
             actions = `<span class="badge bg-success w-100 p-2">Waiting for Carrier</span>`;
-        } else {
+        } else if (po.status === 'SHIPPED' || po.status === 'RECEIVED_SHIPMENT' || po.status === 'ON_DELIVERY' || po.status === 'DELIVERED') {
             targetCol = 'col-ready';
+            cardClass += ' ready';
             actions = `<span class="badge bg-secondary w-100 p-2">\${po.status}</span>`;
         }
 
-        document.getElementById(targetCol).innerHTML += `
-            <div class="\${cardClass} mb-3">
-                <div class="d-flex justify-content-between">
-                    <strong>PO-\${po.id}</strong>
-                    <span class="badge bg-light text-dark small">\${po.status}</span>
+        if (targetCol) {
+            document.getElementById(targetCol).innerHTML += `
+                <div class="${cardClass} mb-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>\${po.orderId}</strong>
+                        <span class="badge bg-light text-dark small">\${po.status}</span>
+                    </div>
+                    <div class="small text-muted mt-2 mb-3">
+                        \${po.customerFullName}<br>
+                        Items: \${po.itemCount || 0}
+                    </div>
+                    ${actions}
                 </div>
-                <div class="text-muted small mt-2 mb-3">
-                    SKU: \${po.sku} | Qty: \${po.quantity}<br>
-                    \${po.proposedDeliveryDate ? '<span class="text-danger">Proposed: ' + po.proposedDeliveryDate + '</span>' : ''}
-                </div>
-                \${actions}
-            </div>
-        `;
+            `;
+        }
     });
 }
 
-// Old functions mapped unchanged
-function openASN(id) {
-    document.getElementById('asnPoId').value = id;
-    if(!asnModalInstance) asnModalInstance = new bootstrap.Modal(document.getElementById('asnModal'));
-    asnModalInstance.show();
-}
-async function submitASN() {
-    const id = document.getElementById('asnPoId').value;
-    const data = {
-        dimensions: document.getElementById('asnDims').value,
-        weight: parseFloat(document.getElementById('asnWeight').value),
-        palletCount: parseInt(document.getElementById('asnPallets').value),
-        receiverName: document.getElementById('asnReceiverName').value,
-        receiverEmail: document.getElementById('asnReceiverEmail').value,
-        receiverMobile: document.getElementById('asnReceiverMobile').value,
-        receiverAddress: document.getElementById('asnReceiverAddress').value
-    };
-    const res = await apiCall(CTX + '/api/vendor-portal/orders/' + id + '/asn', 'POST', data);
-    const d = await res.json();
-    if (d && d.success) {
-        asnModalInstance.hide();
+async function updatePOStatus(id, newStatus) {
+    const res = await apiCall(CTX + '/api/vendor-portal/orders/' + id + '/status', 'PUT', { status: newStatus });
+    if(res && res.ok) {
+        showVendorToast("Order status updated.");
         loadPortal();
-        alert("ASN Submitted.");
     }
-}
-function openProposeDate(id) {
-    document.getElementById('proposePoId').value = id;
-    if(!proposeDateModalInstance) proposeDateModalInstance = new bootstrap.Modal(document.getElementById('proposeDateModal'));
-    proposeDateModalInstance.show();
-}
-async function submitProposedDate() {
-    const id = document.getElementById('proposePoId').value;
-    const date = document.getElementById('newPoDate').value;
-    if(!date) return alert("Select a date");
-    const res = await apiCall(CTX + '/api/vendor-portal/orders/' + id + '/acknowledge?proposedDate=' + date, 'PUT');
-    if(res && res.ok) { proposeDateModalInstance.hide(); loadPortal(); }
-}
-async function acknowledgePO(id) {
-    const res = await apiCall(CTX + '/api/vendor-portal/orders/' + id + '/acknowledge', 'PUT');
-    if(res && res.ok) loadPortal();
 }
 async function updatePO(id, action) {
     const res = await apiCall(CTX + '/api/vendor-portal/orders/' + id + '/' + action, 'PUT');
@@ -838,6 +801,12 @@ document.addEventListener('DOMContentLoaded', loadPortal);
 </div>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
