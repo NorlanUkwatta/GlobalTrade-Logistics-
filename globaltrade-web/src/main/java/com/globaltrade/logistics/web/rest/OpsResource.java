@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import com.globaltrade.logistics.service.local.UserService;
 import com.globaltrade.logistics.entity.User;
+import java.util.Map;
 
 @Path("/ops")
 @Produces(MediaType.APPLICATION_JSON)
@@ -70,10 +71,44 @@ public class OpsResource {
 
     @PUT
     @Path("/orders/{id}/assign")
-    public Response assignVendor(@PathParam("id") Long orderId, @QueryParam("vendorId") Long vendorId) {
-        User opsUser = userService.findByUsernameForAuth(securityContext.getUserPrincipal().getName());
-        ShippingOrder order = opsService.assignVendor(orderId, vendorId, opsUser.getId(), opsUser.getFullName());
-        return Response.ok(ApiResponse.success(order)).build();
+    public Response assignVendor(@PathParam("id") Long id, Map<String, String> req) {
+        String assigneeName = req.get("opsAssigneeName");
+        String assignee = assigneeName != null ? assigneeName : securityContext.getUserPrincipal().getName();
+        Long vendorId = Long.valueOf(req.get("vendorId").toString());
+        ShippingOrder order = opsService.assignVendor(id, vendorId, null, assignee);
+        return Response.ok(ApiResponse.success("Vendor assigned successfully", order)).build();
+    }
+
+    @PUT
+    @Path("/orders/{id}/assign-warehouse")
+    public Response assignWarehouse(@PathParam("id") Long id, Map<String, String> payload) {
+        String warehouseName = payload.get("warehouseName");
+        ShippingOrder order = opsService.assignWarehouseToShippingOrder(id, warehouseName);
+        return Response.ok(ApiResponse.success("Warehouse assigned successfully", order)).build();
+    }
+
+    @PUT
+    @Path("/orders/{id}/assign-carrier")
+    public Response assignCarrierToOrder(@PathParam("id") Long id, Map<String, String> payload) {
+        String carrierName = payload.get("carrierName");
+        ShippingOrder order = opsService.assignCarrierToShippingOrder(id, carrierName);
+        return Response.ok(ApiResponse.success("Carrier assigned successfully", order)).build();
+    }
+
+    @PUT
+    @Path("/orders/{id}/verify-receipt")
+    @RolesAllowed({"WAREHOUSE_MGR", "ADMIN"})
+    public Response verifyWarehouseReceipt(@PathParam("id") Long id) {
+        ShippingOrder order = opsService.verifyWarehouseReceipt(id);
+        return Response.ok(ApiResponse.success("Order receipt verified", order)).build();
+    }
+
+    @PUT
+    @Path("/orders/{id}/ship")
+    @RolesAllowed({"WAREHOUSE_MGR", "ADMIN"})
+    public Response shipOrder(@PathParam("id") Long id) {
+        ShippingOrder order = opsService.shipOrder(id);
+        return Response.ok(ApiResponse.success("Order shipped", order)).build();
     }
 
     @GET
@@ -121,6 +156,11 @@ public class OpsResource {
         return Response.ok(ApiResponse.success("Category deleted")).build();
     }
 }
+
+
+
+
+
 
 
 

@@ -32,5 +32,9 @@
         <role-name>OPS</role-name>
         <group-name>OPS</group-name>
     </security-role-mapping>
+    <security-role-mapping>
+        <role-name>ITOPS</role-name>
+        <group-name>ITOPS</group-name>
+    </security-role-mapping>
     <class-loader delegate="true"/>
 </glassfish-web-app>

@@ -13,7 +13,7 @@ import java.util.UUID;
 })
 public class ShippingOrder implements Serializable {
 
-        public enum Status { PENDING, IN_PROGRESS, IN_WAREHOUSE, SHIPPED, RECEIVED_SHIPMENT, ON_DELIVERY, DELIVERED, RETURNED, CANCELLED }
+        public enum Status { PENDING, IN_PROGRESS, ORDER_COMPLETED, READY_FOR_DELIVERY, IN_WAREHOUSE, WAREHOUSE_VERIFIED, SHIPPED, RECEIVED_SHIPMENT, ON_DELIVERY, DELIVERED, RETURNED, CANCELLED }
     public enum VendorDecision { PENDING, ACCEPTED, REJECTED, PROPOSED_DATE }
 
     @Id
@@ -190,7 +190,21 @@ public class ShippingOrder implements Serializable {
 
     public String getQualityStandardsDocUrl() { return qualityStandardsDocUrl; }
     public void setQualityStandardsDocUrl(String qualityStandardsDocUrl) { this.qualityStandardsDocUrl = qualityStandardsDocUrl; }
+
+    @Column(name = "assigned_warehouse", length = 150)
+    private String assignedWarehouse;
+
+    @Column(name = "assigned_carrier", length = 150)
+    private String assignedCarrier;
+
+    public String getAssignedWarehouse() { return assignedWarehouse; }
+    public void setAssignedWarehouse(String assignedWarehouse) { this.assignedWarehouse = assignedWarehouse; }
+
+    public String getAssignedCarrier() { return assignedCarrier; }
+    public void setAssignedCarrier(String assignedCarrier) { this.assignedCarrier = assignedCarrier; }
 }
+
+
 
 
 

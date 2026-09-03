@@ -11,6 +11,9 @@ public class VendorPortalServiceBean implements VendorPortalService {
 
     @PersistenceContext(unitName = "GlobalTradeLogisticsPU")
     private EntityManager em;
+    
+    @jakarta.inject.Inject
+    private NotificationServiceBean notificationService;
 
     @Override
     public PurchaseOrder findPurchaseOrder(Long id) {
@@ -124,11 +127,30 @@ public class VendorPortalServiceBean implements VendorPortalService {
         return order;
     }
 
-        public ShippingOrder updateOrderStatus(Long id, ShippingOrder.Status status) {
+public ShippingOrder completeOrder(Long vendorId, Long id) {
         ShippingOrder order = em.find(ShippingOrder.class, id);
-        if (order != null) {
-            order.setStatus(status);
+        if (order != null && order.getVendor() != null && order.getVendor().getId().equals(vendorId)) {
+            order.setStatus(ShippingOrder.Status.ORDER_COMPLETED);
             em.merge(order);
+            notificationService.sendEmail("ops@globaltrade.com", "Order " + order.getOrderId() + " Completed", "The vendor has completed order " + order.getOrderId() + ". Please assign a warehouse.");
+        }
+        return order;
+    }
+
+    public ShippingOrder handoverToWarehouse(Long vendorId, Long id) {
+        ShippingOrder order = em.find(ShippingOrder.class, id);
+        if (order != null && order.getVendor() != null && order.getVendor().getId().equals(vendorId)) {
+            order.setStatus(ShippingOrder.Status.IN_WAREHOUSE);
+            em.merge(order);
+            
+            notificationService.sendEmail("ops@globaltrade.com", "Order " + order.getOrderId() + " Handed Over", "The vendor has handed over order " + order.getOrderId() + " to the warehouse.");
+            
+            if (order.getCustomerId() != null) {
+                com.globaltrade.logistics.entity.User customer = em.find(com.globaltrade.logistics.entity.User.class, order.getCustomerId());
+                if (customer != null && customer.getEmail() != null && !customer.getEmail().isEmpty()) {
+                    notificationService.sendEmail(customer.getEmail(), "Your order " + order.getOrderId() + " is in the warehouse", "Your order has been produced and handed over to the warehouse for shipment.");
+                }
+            }
         }
         return order;
     }
@@ -145,8 +167,22 @@ public class VendorPortalServiceBean implements VendorPortalService {
             .setParameter("vendorId", vendorId)
             .getResultList();
     }
+    public ShippingOrder updateOrderStatus(Long id, ShippingOrder.Status status) {
+        ShippingOrder order = em.find(ShippingOrder.class, id);
+        if (order != null) {
+            order.setStatus(status);
+            em.merge(order);
+        }
+        return order;
+    }
+    public ShippingOrder readyForDelivery(Long vendorId, Long id, Double weight) {
+        ShippingOrder order = em.find(ShippingOrder.class, id);
+        if (order != null && order.getVendor() != null && order.getVendor().getId().equals(vendorId)) {
+            order.setStatus(ShippingOrder.Status.READY_FOR_DELIVERY);
+            order.setWeight(weight);
+            em.merge(order);
+            notificationService.sendEmail("ops@globaltrade.com", "Order " + order.getOrderId() + " Ready for Delivery", "Vendor has marked order " + order.getOrderId() + " as ready for delivery. Total weight: " + weight + " kg. Please assign a carrier/transporter.");
+        }
+        return order;
+    }
 }
-
-
-
-

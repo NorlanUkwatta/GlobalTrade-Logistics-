@@ -48,14 +48,12 @@
     </div>
     <ul class="nav flex-column mt-2" id="sidebarNav">
         <li class="nav-item">
-            <a class="nav-link active" data-target="section-po"><i class="bi bi-kanban me-2"></i>Purchase Orders</a>
+            <a class="nav-link active" data-target="section-orders"><i class="bi bi-box-seam me-2"></i>Orders</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" data-target="section-profile"><i class="bi bi-person-badge me-2"></i>My Profile</a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" data-target="section-shipping"><i class="bi bi-box-seam me-2"></i>Shipping Orders</a>
-        </li>
+        
         <li class="nav-item">
             <a class="nav-link" data-target="section-returns"><i class="bi bi-arrow-return-left me-2"></i>Returned Items</a>
         </li>
@@ -80,8 +78,8 @@
         <span class="badge bg-secondary fs-6" id="userNameDisplay">Vendor Rep</span>
     </div>
 
-    <!-- Purchase Orders Section -->
-    <div id="section-po" class="content-section active">
+        <!-- Orders Section -->
+    <div id="section-orders" class="content-section active">
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="kpi-card d-flex align-items-center">
@@ -107,43 +105,87 @@
             </div>
         </div>
 
+        <ul class="nav nav-tabs mb-3" id="ordersTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#pane-shipping" type="button" role="tab">Shipping Orders</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#pane-processing" type="button" role="tab">In Processing Orders</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#pane-history" type="button" role="tab">Order History</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="ordersTabsContent">
+            <!-- Shipping Orders Pane -->
+            <div class="tab-pane fade show active" id="pane-shipping" role="tabpanel">
                 <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white border-0 py-3">
-                <h5 class="mb-0 fw-bold">Assigned Orders</h5>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer Name</th>
+                                        <th>Item Count</th>
+                                        <th>Assigned By (Ops)</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assignedOrdersTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer Name</th>
-                                <th>Item Count</th>
-                                <th>Assigned By (Ops)</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="assignedOrdersTbody">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
+
+            <!-- In Processing Pane -->
+            <div class="tab-pane fade" id="pane-processing" role="tabpanel">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer Name</th>
+                                        <th>Item Count</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inProcessingTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order History Pane -->
+            <div class="tab-pane fade" id="pane-history" role="tabpanel">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer Name</th>
+                                        <th>Item Count</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="kanban-board">
-            
-            <div class="kanban-col">
-                <h6 class="fw-bold mb-3"><i class="bi bi-gear me-2"></i>In Production</h6>
-                <div id="col-production"></div>
-            </div>
-            <div class="kanban-col">
-                <h6 class="fw-bold mb-3"><i class="bi bi-truck me-2"></i>Ready / Shipped</h6>
-                <div id="col-ready"></div>
-            </div>
-        </div>
     </div>
-
     <!-- Profile Section -->
     <div id="section-profile" class="content-section">
         <div class="card shadow-sm border-0">
@@ -197,31 +239,6 @@
                     </div>
                     <button type="submit" class="btn btn-primary mt-3">Save Profile</button>
                 </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Shipping Orders Section -->
-    <div id="section-shipping" class="content-section">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                <h5 class="mb-0">My Shipping Orders</h5>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createShippingOrderModal">Create Order</button>
-            </div>
-            <div class="card-body">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Date</th>
-                            <th>Customer</th>
-                            <th>Route</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="shippingOrdersTableBody"></tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -496,9 +513,9 @@ async function loadPortal() {
         knownVendorOrderIds = currentIds;
         firstVendorLoad = false;
         
-        renderKanban(d.data);
         renderAssignedOrdersTable();
-        renderShippingOrders(d.data);
+        renderInProcessingTable();
+        renderOrderHistoryTable();
     }
 
     // 5. Load Returns
@@ -560,23 +577,92 @@ async function createShippingOrder(e) {
 // Keep a global reference for the modal view
 let currentShippingOrders = [];
 
-function renderShippingOrders(orders) {
-    currentShippingOrders = orders;
-    const tbody = document.getElementById('shippingOrdersTableBody');
-    tbody.innerHTML = '';
-    orders.forEach(o => {
-        const route = (o.routeFrom && o.routeTo) ? (o.routeFrom + ' &rarr; ' + o.routeTo) : 'TBD';
-        const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '';
-        tbody.innerHTML += `
-            <tr>
-                <td><strong>\\${o.orderId}</strong></td>
-                <td>\${date}</td>
-                <td>\\${o.customerFullName}</td>
-                <td>\${route}</td>
-                <td><span class="badge bg-secondary">\${o.status}</span></td>
-                <td><button class="btn btn-sm btn-outline-primary" onclick="viewShippingOrder('\\${o.orderId}')">Details</button></td>
-            </tr>
+function renderInProcessingTable() {
+    const tbody = document.getElementById("inProcessingTbody");
+    if(!tbody) return;
+    tbody.innerHTML = "";
+    const inProc = currentShippingOrders.filter(o => o.vendorDecision === "ACCEPTED" && (o.status === "IN_PROGRESS" || o.status === "READY_FOR_DELIVERY" || o.status === "ORDER_COMPLETED"));
+    if (inProc.length === 0) {
+        tbody.innerHTML = "<tr><td colspan=\"5\" class=\"text-center text-muted py-4\">No orders in processing</td></tr>";
+        return;
+    }
+    inProc.forEach(o => {
+        const tr = document.createElement("tr");
+        
+        let actionBtn = "";
+        let statusBadge = "";
+        
+        if (o.status === "IN_PROGRESS" || o.status === "ORDER_COMPLETED") {
+            statusBadge = "<span class=\"badge bg-primary\">IN PRODUCTION</span>";
+            actionBtn = "<button class=\"btn btn-sm btn-success fw-bold\" onclick=\"markReadyForDelivery(" + o.id + ")\">Ready for Delivery</button>";
+        } else if (o.status === "READY_FOR_DELIVERY") {
+            statusBadge = "<span class=\"badge bg-warning text-dark\">AWAITING CARRIER</span>";
+            if (o.assignedCarrier) {
+                statusBadge = "<span class=\"badge bg-info text-dark\">CARRIER ASSIGNED: " + o.assignedCarrier + "</span>";
+                actionBtn = "<button class=\"btn btn-sm btn-primary fw-bold\" onclick=\"handoverOrder(" + o.id + ")\">Handover to Warehouse</button>";
+            } else {
+                actionBtn = "<button class=\"btn btn-sm btn-secondary fw-bold\" disabled>Waiting for Ops</button>";
+            }
+        }
+        
+        let html = "<td><strong>" + o.orderId + "</strong></td>" +
+                   "<td>" + o.customerFullName + "</td>" +
+                   "<td>" + (o.itemCount || 0) + "</td>" +
+                   "<td>" + statusBadge + "</td>" +
+                   "<td>" + actionBtn + "</td>";
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+    });
+}
+
+async function markReadyForDelivery(id) {
+    let weight = prompt("Please enter the total weight of the order in kg:");
+    if (!weight) return; // cancelled or empty
+    if (isNaN(parseFloat(weight))) {
+        alert("Invalid weight entered. Please enter a number.");
+        return;
+    }
+    
+    const res = await apiCall(CTX + "/api/vendor-portal/orders/" + id + "/ready", "PUT", { weight: parseFloat(weight) });
+    if (res && res.ok) {
+        showAlert("Order marked ready for delivery and weight updated.", "success");
+        loadPortal();
+    }
+}
+
+async function handoverOrder(id) {
+    const res = await apiCall(CTX + "/api/vendor-portal/orders/" + id + "/handover-warehouse", "PUT");
+    if (res && res.ok) {
+        showAlert("Order handed over to warehouse successfully.", "success");
+        loadPortal();
+    }
+}
+
+function renderOrderHistoryTable() {
+    const tbody = document.getElementById("historyTbody");
+    if(!tbody) return;
+    tbody.innerHTML = "";
+    const history = currentShippingOrders.filter(o => o.vendorDecision === "ACCEPTED" && o.status !== "IN_PROGRESS");
+    if (history.length === 0) {
+        tbody.innerHTML = "<tr><td colspan=\"5\" class=\"text-center text-muted py-4\">No order history</td></tr>";
+        return;
+    }
+    history.forEach(o => {
+        let statusBadge = "secondary";
+        if(o.status === "IN_WAREHOUSE") statusBadge = "warning text-dark";
+        if(o.status === "SHIPPED") statusBadge = "info";
+        if(o.status === "DELIVERED") statusBadge = "success";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><strong>\${o.orderId}</strong></td>
+            <td>\${o.customerFullName}</td>
+            <td>\${o.itemCount || 0}</td>
+            <td><span class="badge bg-\${statusBadge}">\${o.status}</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails('\${o.orderId}')">View Details</button>
+            </td>
         `;
+        tbody.appendChild(tr);
     });
 }
 
@@ -679,54 +765,6 @@ function promptReject(orderId) {
     }
 }
 
-function renderKanban(pos) {
-    
-    const colProduction = document.getElementById('col-production');
-    const colReady = document.getElementById('col-ready');
-     
-    colProduction.innerHTML = ''; 
-    colReady.innerHTML = '';
-    
-    pos.forEach(po => {
-        if (po.vendorDecision === 'PENDING' || po.vendorDecision === 'PROPOSED_DATE' || po.vendorDecision === 'REJECTED') {
-            return; // Handled elsewhere or not active
-        }
-
-        let actions = '';
-        let targetCol = null;
-        let cardClass = 'po-card';
-        
-        if (po.status === 'IN_PROGRESS') {
-            targetCol = 'col-production';
-            actions = `<button class="btn btn-sm btn-primary w-100" onclick="updatePOStatus('\${po.id}', 'IN_WAREHOUSE')">Ready for Pickup</button>`;
-        } else if (po.status === 'IN_WAREHOUSE') {
-            targetCol = 'col-ready';
-            cardClass += ' ready';
-            actions = `<span class="badge bg-success w-100 p-2">Waiting for Carrier</span>`;
-        } else if (po.status === 'SHIPPED' || po.status === 'RECEIVED_SHIPMENT' || po.status === 'ON_DELIVERY' || po.status === 'DELIVERED') {
-            targetCol = 'col-ready';
-            cardClass += ' ready';
-            actions = `<span class="badge bg-secondary w-100 p-2">\${po.status}</span>`;
-        }
-
-        if (targetCol) {
-            document.getElementById(targetCol).innerHTML += `
-                <div class="${cardClass} mb-3">
-                    <div class="d-flex justify-content-between">
-                        <strong>\${po.orderId}</strong>
-                        <span class="badge bg-light text-dark small">\${po.status}</span>
-                    </div>
-                    <div class="small text-muted mt-2 mb-3">
-                        \${po.customerFullName}<br>
-                        Items: \${po.itemCount || 0}
-                    </div>
-                    ${actions}
-                </div>
-            `;
-        }
-    });
-}
-
 async function updatePOStatus(id, newStatus) {
     const res = await apiCall(CTX + '/api/vendor-portal/orders/' + id + '/status', 'PUT', { status: newStatus });
     if(res && res.ok) {
@@ -801,6 +839,13 @@ document.addEventListener('DOMContentLoaded', loadPortal);
 </div>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 

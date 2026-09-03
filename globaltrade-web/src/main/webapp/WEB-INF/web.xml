@@ -40,6 +40,10 @@
         <description>Operations Team</description>
         <role-name>OPS</role-name>
     </security-role>
+    <security-role>
+        <description>IT Operations</description>
+        <role-name>ITOPS</role-name>
+    </security-role>
     <jsp-config>
         <jsp-property-group>
             <url-pattern>*.jsp</url-pattern>

@@ -49,6 +49,9 @@ import java.util.Set;
 @RequestScoped
 public class AuthResource {
 
+    @EJB
+    private com.globaltrade.logistics.service.ITOpsServiceBean itOpsService;
+
     private static final Logger LOG = LogManager.getLogger(AuthResource.class);
     private static final String AUTH_COOKIE_NAME = "auth_token";
 
@@ -63,6 +66,23 @@ public class AuthResource {
 
     @Context
     private SecurityContext securityContext;
+
+    @POST
+    @Path("/reset-password")
+    @PermitAll
+    public Response resetPassword(java.util.Map<String, String> payload) {
+        String token = payload.get("token");
+        String newPassword = payload.get("newPassword");
+        if (token == null || newPassword == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(ApiResponse.error("Missing token or password")).build();
+        }
+        boolean success = itOpsService.resetPasswordWithToken(token, newPassword);
+        if (success) {
+            return Response.ok(ApiResponse.success("Password reset successful", null)).build();
+        } else {
+            return Response.status(Response.Status.BAD_REQUEST).entity(ApiResponse.error("Invalid or expired token")).build();
+        }
+    }
 
     // -
     //  POST /api/auth/login - @PermitAll
@@ -223,3 +243,4 @@ public class AuthResource {
             .build();
     }
 }
+

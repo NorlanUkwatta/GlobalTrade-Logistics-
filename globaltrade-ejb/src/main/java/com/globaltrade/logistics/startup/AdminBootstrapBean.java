@@ -57,6 +57,11 @@ public class AdminBootstrapBean {
                     LOG.info("Injecting missing ops1 user...");
                     createUser("ops1", "GlobalTrade Operations", "ops@globaltrade.lk", UserRole.OPS, null, null);
                 }
+                Long itopsCount = em.createQuery("SELECT COUNT(u) FROM User u WHERE u.username = 'itops1'", Long.class).getSingleResult();
+                if (itopsCount == 0) {
+                    LOG.info("Injecting missing itops1 user...");
+                    createUser("itops1", "IT Operations", "itops@globaltrade.lk", UserRole.ITOPS, null, null);
+                }
             }
         } catch (Exception e) {
             LOG.fatal("BOOTSTRAP FAILURE: {}", e.getMessage(), e);
@@ -94,6 +99,7 @@ public class AdminBootstrapBean {
         createUser("warehouse1", "Colombo Port Warehouse", "wh@globaltrade.lk", UserRole.WAREHOUSE_MGR, null, null);
         createUser("customer1", "Dilmah Tea Exports", "logistics@dilmah.lk", UserRole.CUSTOMER, null, 1001L);
         createUser("ops1", "GlobalTrade Operations", "ops@globaltrade.lk", UserRole.OPS, null, null);
+        createUser("itops1", "IT Operations", "itops@globaltrade.lk", UserRole.ITOPS, null, null);
 
         // 4. Create Containers
         Container c1 = new Container();
@@ -189,3 +195,5 @@ public class AdminBootstrapBean {
         return u;
     }
 }
+
+

@@ -107,9 +107,19 @@ public class CustomerResource {
         return userService.findByUsernameForAuth(securityContext.getUserPrincipal().getName());
     }
 
+    @Inject
+    private com.globaltrade.logistics.service.OpsServiceBean opsService;
+
+    @GET
+    @Path("/shipping-orders")
+    @RolesAllowed({"CUSTOMER", "ADMIN"})
+    public Response getMyShippingOrders() {
+        User u = getCustomerUser();
+        return Response.ok(ApiResponse.success(opsService.getOrdersByCustomer(u.getCustomerId()))).build();
+    }
+
     @GET
     @Path("/shipments")
-    @RolesAllowed({"CUSTOMER", "ADMIN"})
     public Response getMyTracking() {
         User u = getCustomerUser();
         Long cid = u.getCustomerId();
@@ -193,3 +203,4 @@ public class CustomerResource {
         return Response.ok(ApiResponse.success(data)).build();
     }
 }
+

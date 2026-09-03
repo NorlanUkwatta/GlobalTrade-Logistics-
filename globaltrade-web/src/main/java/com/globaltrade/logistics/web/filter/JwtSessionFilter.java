@@ -29,6 +29,7 @@ public class JwtSessionFilter implements Filter {
         "/signup.jsp",
         "/vendor-signup.jsp",
         "/tracking.jsp",
+        "/reset-password.jsp",
         "/index.html", "/index.jsp"
     );
 

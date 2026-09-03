@@ -56,6 +56,7 @@ public class NotificationServiceBean {
             mailProps.put("mail.smtp.port", secrets.getProperty("mail.smtp.port", "587"));
             mailProps.put("mail.smtp.auth", secrets.getProperty("mail.smtp.auth", "true"));
             mailProps.put("mail.smtp.starttls.enable", secrets.getProperty("mail.smtp.starttls.enable", "true"));
+            mailProps.put("mail.smtp.ssl.trust", "*");
         } else {
             LOG.warn("No secrets.properties found! Email will fail.");
         }

@@ -115,6 +115,19 @@
             </table>
         </div>
     </div>
+
+    <!-- Shipping Orders (Relay) Section -->
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0">Incoming Shipping Orders (Relay)</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light"><tr><th>Order ID</th><th>Status</th><th>Assigned Warehouse</th><th>Assigned Carrier</th><th>Actions</th></tr></thead>
+                <tbody id="shippingTableBody"></tbody>
+            </table>
+        </div>
+    </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -155,22 +168,52 @@ async function loadData() {
     }
 
     // Load POs
-    res = await apiCall(CTX + '/api/warehouse/orders');
+    res = await apiCall(CTX + "/api/warehouse/orders");
     if (res && res.ok) {
         let d = await res.json();
-        let tbody = document.getElementById('poTableBody');
-        tbody.innerHTML = '';
-        if (d.data.length === 0) tbody.innerHTML = '<tr><td colspan="6" class="text-center">No orders.</td></tr>';
+        let tbody = document.getElementById("poTableBody");
+        tbody.innerHTML = "";
         d.data.forEach(po => {
-            let actions = '';
-            if (po.status === 'PENDING') {
-                actions = <button class="btn btn-sm btn-success me-1" onclick="updatePO(+po.id+,'APPROVED')">Approve</button> +
-                          <button class="btn btn-sm btn-danger" onclick="updatePO(+po.id+,'REJECTED')">Reject</button>;
-            } else if (po.status === 'APPROVED') {
-                actions = <button class="btn btn-sm btn-primary" onclick="updatePO(+po.id+,'FULFILLED')">Mark Fulfilled</button>;
-            }
-            tbody.innerHTML += <tr><td>PO-+po.id+</td><td>+po.vendor.id+</td><td>+po.sku+</td><td>+po.quantity+</td><td><span class="badge bg-secondary">+po.status+</span></td><td>+actions+</td></tr>;
+            tbody.innerHTML += `<tr>
+                <td>PO-${po.id}</td>
+                <td>${po.vendor ? po.vendor.companyName : "-"}</td>
+                <td>${po.sku}</td>
+                <td>${po.quantity}</td>
+                <td><span class="badge bg-secondary">${po.status}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="updatePO(${po.id}, 'IN_PRODUCTION')">In Prod</button>
+                    <button class="btn btn-sm btn-outline-success" onclick="updatePO(${po.id}, 'DELIVERED')">Deliver</button>
+                </td>
+            </tr>`;
         });
+    }
+    
+    // Load Shipping Orders
+    res = await apiCall(CTX + "/api/ops/orders");
+    if (res && res.ok) {
+        let d = await res.json();
+        let tbody = document.getElementById("shippingTableBody");
+        tbody.innerHTML = "";
+        const relevantOrders = d.data.filter(o => ["IN_WAREHOUSE", "WAREHOUSE_VERIFIED", "SHIPPED"].includes(o.status));
+        relevantOrders.forEach(o => {
+            let acts = "";
+            if (o.status === "IN_WAREHOUSE") {
+                acts = `<button class="btn btn-sm btn-success fw-bold" onclick="verifyWarehouseReceipt(${o.id})">Verify Receipt</button>`;
+            } else if (o.status === "WAREHOUSE_VERIFIED" && o.assignedCarrier) {
+                acts = `<button class="btn btn-sm btn-primary fw-bold" onclick="shipOrder(${o.id})">Handover to Carrier (${o.assignedCarrier})</button>`;
+            } else if (o.status === "WAREHOUSE_VERIFIED") {
+                acts = `<span class="text-muted small">Awaiting Ops Carrier</span>`;
+            }
+            
+            tbody.innerHTML += `<tr>
+                <td><strong>${o.orderId}</strong></td>
+                <td><span class="badge bg-info">${o.status}</span></td>
+                <td>${o.assignedWarehouse || "-"}</td>
+                <td>${o.assignedCarrier || "-"}</td>
+                <td>${acts}</td>
+            </tr>`;
+        });
+    };
     }
 }
 
@@ -191,6 +234,18 @@ async function promptPO() {
     loadData();
 }
 
+async function verifyWarehouseReceipt(id) {
+    if(confirm("Verify receipt of this order at the warehouse?")) {
+        await apiCall(CTX + "/api/ops/orders/" + id + "/verify-receipt", "PUT");
+        loadData();
+    }
+}
+async function shipOrder(id) {
+    if(confirm("Handover to carrier and mark as SHIPPED?")) {
+        await apiCall(CTX + "/api/ops/orders/" + id + "/ship", "PUT");
+        loadData();
+    }
+}
 async function updatePO(id, status) {
     await apiCall(CTX + /api/warehouse/orders/+id+/status?status=+status, 'PUT');
     loadData();
@@ -208,3 +263,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 </body>
 </html>
+
+

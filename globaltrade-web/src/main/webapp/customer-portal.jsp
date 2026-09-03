@@ -501,7 +501,7 @@ async function loadOrders() {
             
             newHtml += `
                 <tr>
-                    <td class="fw-bold">\${o.orderId}</td>
+                    <td class="fw-bold">\\${o.orderId}</td>
                     <td>\${o.vendor ? o.vendor.companyName : '-'}</td>
                     <td>\${o.orderDescription || '-'}</td>
                     <td>\${statusBadge}</td>
@@ -556,50 +556,66 @@ function getStepperHtml(status) {
 }
 
 async function loadShipments() {
-    const res = await apiCall(CTX + '/api/customers/shipments');
+    const res = await apiCall(CTX + '/api/customers/shipping-orders');
     if (res && res.ok) {
         const d = await res.json();
         const list = document.getElementById('shipmentList');
         list.innerHTML = '';
-                let newHtml = '';
-        d.data.forEach(s => {
-            const currentStatus = s.status;
-            if (!firstCustLoad && knownShipmentStatuses[s.id] && knownShipmentStatuses[s.id] !== currentStatus) {
-                showCustToast("Real-Time Alert: Shipment " + s.trackingNumber + " status updated to " + currentStatus.replace(/_/g, ' ') + "!");
-            }
-            knownShipmentStatuses[s.id] = currentStatus;
-            const origin = s.origin || 'Pending Dispatch';
-            const dest = s.destination || 'Awaiting Routing';
+        if (d.data.length === 0) {
+            list.innerHTML = '<p class="text-muted">No live shipments found.</p>';
+            return;
+        }
+        
+        d.data.forEach(o => {
+            let step = 0;
+            const stat = o.status;
+            if (stat === 'PENDING' || stat === 'IN_PROGRESS') step = 1;
+            else if (stat === 'READY_FOR_DELIVERY' || stat === 'ORDER_COMPLETED') step = 2;
+            else if (stat === 'IN_WAREHOUSE' || stat === 'WAREHOUSE_VERIFIED') step = 3;
+            else if (stat === 'SHIPPED' || stat === 'ON_DELIVERY' || stat === 'DELIVERED') step = 4;
             
-            newHtml += `
+            let w = (step / 4) * 100;
+            
+            let html = `
                 <div class="shipment-anim-card">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <span class="text-muted small fw-bold d-block mb-1">CONSIGNMENT REF</span>
-                            <h5 class="mb-0 fw-bold text-dark">\${s.trackingNumber}</h5>
+                            <h5 class="fw-bold mb-0">Order: \${o.orderId}</h5>
+                            <small class="text-muted">Current Status: <span class="badge bg-primary">\${o.status}</span></small>
                         </div>
                         <div class="text-end">
-                            <span class="text-muted small fw-bold d-block mb-1">CURRENT STATUS</span>
-                            <span class="badge bg-dark px-3 py-2">\${s.status.replace(/_/g, ' ')}</span>
+                            <small class="text-muted d-block">Assigned Warehouse: \${o.assignedWarehouse || '-'}</small>
+                            <small class="text-muted d-block">Assigned Carrier: \${o.assignedCarrier || '-'}</small>
                         </div>
                     </div>
                     
-                    <div class="row text-center mb-3">
-                        <div class="col-5">
-                            <p class="mb-0 text-muted small">Origin</p>
-                            <p class="fw-bold mb-0">\${origin}</p>
+                    <div class="track-stepper">
+                        <div class="track-progress-bar" style="width: 0%;"></div>
+                        
+                        <div class="track-step \${step >= 1 ? 'active' : ''}">
+                            <div class="track-icon \${step >= 1 ? 'bg-primary text-white' : 'bg-light'}"><i class="bi bi-box-seam"></i></div>
+                            <div class="track-label">Processing</div>
                         </div>
-                        <div class="col-2 d-flex align-items-center justify-content-center">
-                            <i class="bi bi-arrow-right text-muted fs-4"></i>
+                        <div class="track-step \${step >= 2 ? 'active' : ''}">
+                            <div class="track-icon \${step >= 2 ? 'bg-primary text-white' : 'bg-light'}"><i class="bi bi-check-circle"></i></div>
+                            <div class="track-label">Completed</div>
                         </div>
-                        <div class="col-5">
-                            <p class="mb-0 text-muted small">Destination</p>
-                            <p class="fw-bold mb-0">\${dest}</p>
+                        <div class="track-step \${step >= 3 ? 'active' : ''}">
+                            <div class="track-icon \${step >= 3 ? 'bg-primary text-white' : 'bg-light'}"><i class="bi bi-building"></i></div>
+                            <div class="track-label">In Warehouse</div>
+                        </div>
+                        <div class="track-step \${step >= 4 ? 'active' : ''}">
+                            <div class="track-icon \${step >= 4 ? 'bg-primary text-white' : 'bg-light'}"><i class="bi bi-truck"></i></div>
+                            <div class="track-label">Shipped</div>
                         </div>
                     </div>
-                    \${getStepperHtml(s.status)}
                 </div>
             `;
+            list.innerHTML += html;
+            setTimeout(() => {
+                const bars = document.querySelectorAll('.track-progress-bar');
+                bars[bars.length - 1].style.width = w + '%';
+            }, 50);
         });
     }
 }
@@ -723,6 +739,11 @@ document.addEventListener('DOMContentLoaded', loadPortal);
 </div>
 </body>
 </html>
+
+
+
+
+
 
 
 

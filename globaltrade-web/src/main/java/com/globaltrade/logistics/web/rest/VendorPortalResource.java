@@ -152,6 +152,32 @@ public class VendorPortalResource {
     }
 
     @PUT
+    @Path("/orders/{id}/complete")
+    @RolesAllowed("VENDOR_REP")
+    public Response completeOrder(@PathParam("id") Long id) {
+        vendorPortalService.completeOrder(getVendorUser().getVendorId(), id);
+        return Response.ok(ApiResponse.success("Order completed.", null)).build();
+    }
+
+    @PUT
+    @Path("/orders/{id}/ready")
+    @RolesAllowed("VENDOR_REP")
+    public Response readyForDelivery(@PathParam("id") Long id, java.util.Map<String, Double> payload) {
+        Double weight = payload.get("weight");
+        if (weight == null) return Response.status(400).entity(ApiResponse.error("Weight is required")).build();
+        vendorPortalService.readyForDelivery(getVendorUser().getVendorId(), id, weight);
+        return Response.ok(ApiResponse.success("Order marked ready for delivery.", null)).build();
+    }
+
+    @PUT
+    @Path("/orders/{id}/handover-warehouse")
+    @RolesAllowed("VENDOR_REP")
+    public Response handoverToWarehouse(@PathParam("id") Long id) {
+        vendorPortalService.handoverToWarehouse(getVendorUser().getVendorId(), id);
+        return Response.ok(ApiResponse.success("Order handed over to warehouse.", null)).build();
+    }
+
+    @PUT
     @Path("/orders/{id}/production")
     @RolesAllowed("VENDOR_REP")
     public Response inProduction(@PathParam("id") Long id) {
@@ -200,6 +226,8 @@ public class VendorPortalResource {
         return Response.ok(ApiResponse.success(returns)).build();
     }
 }
+
+
 
 
 

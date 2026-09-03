@@ -103,8 +103,9 @@
                             <th>Order ID</th>
                             <th>Client / Recipient</th>
                             <th>Items</th>
+                            <th>Weight</th>
                             <th>Timeline</th>
-                            <th>Vendor</th>
+                            <th>Vendor & Status</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -367,15 +368,29 @@ async function loadOrders() {
                 acts += '<button class="btn btn-sm btn-outline-info ms-1" onclick="viewOrderDetails(\''+o.id+'\')">View</button>';
             }
             
-            let vend = o.vendor ? o.vendor.companyName + '<br>' + decisionHtml : '<span class="text-warning">Unassigned</span>';
-            newHtml += '<tr>' +
-                    '<td class="fw-bold">' + o.orderId + '</td>' +
-                    '<td>' + o.customerFullName + '</td>' +
-                    '<td>' + (o.itemCount || '-') + '</td>' +
-                    '<td>' + (o.expectedTimeline || '-') + '</td>' +
-                    '<td class="fw-bold">' + vend + '</td>' +
-                    '<td class="text-end text-nowrap">' + acts + '</td>' +
-                '</tr>';
+            let statusHtml = "";
+            if (o.status && o.status !== "PENDING" && o.status !== "IN_PROGRESS") {
+                statusHtml = "<br><span class=\"badge bg-info text-dark\">" + o.status.replace(/_/g, " ") + "</span>";
+            }
+            let vend = o.vendor ? o.vendor.companyName + "<br>" + decisionHtml + statusHtml : "<span class=\"text-warning\">Unassigned</span>";
+            
+            if (o.status === "READY_FOR_DELIVERY") {
+                acts += "<button class=\"btn btn-sm btn-primary ms-1\" onclick=\"assignCarrierPrompt(" + o.id + ")\">Assign Carrier</button>";
+            } else if (o.status === "ORDER_COMPLETED" || o.status === "IN_WAREHOUSE") {
+                if (!o.assignedWarehouse) {
+                    acts += "<button class=\"btn btn-sm btn-secondary ms-1\" onclick=\"assignWarehousePrompt(" + o.id + ")\">Assign Warehouse</button>";
+                }
+            }
+            
+            newHtml += "<tr>" +
+                    "<td class=\"fw-bold\">" + o.orderId + "</td>" +
+                    "<td>" + o.customerFullName + "</td>" +
+                    "<td>" + (o.itemCount || "-") + "</td>" +
+                    "<td>" + (o.weight ? o.weight + " kg" : "-") + "</td>" +
+                    "<td>" + (o.expectedTimeline || "-") + "</td>" +
+                    "<td class=\"fw-bold\">" + vend + "</td>" +
+                    "<td class=\"text-end text-nowrap\">" + acts + "</td>" +
+                "</tr>";
         });
         
         knownOrderIds = currentIds;
@@ -415,6 +430,20 @@ async function loadShipments() {
     }
 }
 
+async function assignWarehousePrompt(id) {
+    let w = prompt("Enter Warehouse Name to assign:");
+    if(w) {
+        await apiCall(CTX + '/api/ops/orders/' + id + '/assign-warehouse', 'PUT', {warehouseName: w});
+        loadOrders();
+    }
+}
+async function assignCarrierPrompt(id) {
+    let c = prompt("Enter Carrier Name to assign:");
+    if(c) {
+        await apiCall(CTX + '/api/ops/orders/' + id + '/assign-carrier', 'PUT', {carrierName: c});
+        loadOrders();
+    }
+}
 async function openVendorModal(orderId) {
     document.getElementById('assignOrderId').value = orderId;
     const res = await apiCall(CTX + '/api/ops/vendors');
@@ -516,6 +545,11 @@ document.addEventListener('DOMContentLoaded', loadOps);
 </div>
 </body>
 </html>
+
+
+
+
+
 
 
 

@@ -63,5 +63,11 @@ public enum UserRole {
     /**
      * Operations — Internal team managing order assignment and transport.
      */
-    OPS
+    OPS,
+
+    /**
+     * IT Operations - System health and user account management.
+     */
+    ITOPS
 }
+

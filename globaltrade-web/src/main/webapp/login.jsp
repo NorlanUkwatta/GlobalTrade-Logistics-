@@ -167,6 +167,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 target = '/customer-portal.jsp';
             } else if (role === 'OPS') {
                 target = '/ops-portal.jsp';
+            } else if (role === 'ITOPS') {
+                target = '/itops-portal.jsp';
             }
             
             setTimeout(() => {
@@ -211,3 +213,4 @@ function clearAlert() {
 </script>
 </body>
 </html>
+

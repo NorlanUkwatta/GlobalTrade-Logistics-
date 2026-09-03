@@ -8,6 +8,8 @@ import java.util.List;
 
 @Stateless
 public class OpsServiceBean {
+    @jakarta.inject.Inject
+    private NotificationServiceBean notificationService;
     public void executeNative(String sql) {
         em.createNativeQuery(sql).executeUpdate();
     }
@@ -23,6 +25,58 @@ public class OpsServiceBean {
     public List<ShippingOrder> getAllOrders() {
         return em.createQuery("SELECT o FROM ShippingOrder o ORDER BY o.createdAt DESC", ShippingOrder.class)
                  .getResultList();
+    }
+    
+    public List<ShippingOrder> getOrdersByCustomer(Long customerId) {
+        return em.createQuery("SELECT o FROM ShippingOrder o WHERE o.customerId = :cid ORDER BY o.createdAt DESC", ShippingOrder.class)
+                 .setParameter("cid", customerId)
+                 .getResultList();
+    }
+
+    public ShippingOrder assignWarehouseToShippingOrder(Long orderId, String warehouseName) {
+        ShippingOrder order = em.find(ShippingOrder.class, orderId);
+        if (order != null) {
+            order.setAssignedWarehouse(warehouseName);
+            em.merge(order);
+            if (order.getVendor() != null) {
+                notificationService.sendEmail(order.getVendor().getEmail(), "Warehouse Assigned", "Warehouse " + warehouseName + " has been assigned for your order " + order.getOrderId() + ". Please handover the order to the warehouse.");
+            }
+        }
+        return order;
+    }
+
+    public ShippingOrder assignCarrierToShippingOrder(Long orderId, String carrierName) {
+        ShippingOrder order = em.find(ShippingOrder.class, orderId);
+        if (order != null) {
+            order.setAssignedCarrier(carrierName);
+            em.merge(order);
+            if (order.getVendor() != null) {
+                notificationService.sendEmail(order.getVendor().getEmail(), "Carrier Assigned", "Carrier/Transporter " + carrierName + " has been assigned for your order " + order.getOrderId() + ".");
+            }
+        }
+        return order;
+    }
+
+    public ShippingOrder verifyWarehouseReceipt(Long orderId) {
+        ShippingOrder order = em.find(ShippingOrder.class, orderId);
+        if (order != null) {
+            order.setStatus(ShippingOrder.Status.WAREHOUSE_VERIFIED);
+            em.merge(order);
+            notificationService.sendEmail("ops@globaltrade.com", "Warehouse Receipt Verified", "Order " + order.getOrderId() + " has been received at the warehouse. Please assign a carrier.");
+        }
+        return order;
+    }
+
+    public ShippingOrder shipOrder(Long orderId) {
+        ShippingOrder order = em.find(ShippingOrder.class, orderId);
+        if (order != null) {
+            order.setStatus(ShippingOrder.Status.SHIPPED);
+            em.merge(order);
+            notificationService.sendEmail("ops@globaltrade.com", "Order Shipped", "Order " + order.getOrderId() + " has been shipped via " + order.getAssignedCarrier());
+            // In a real app we would get the customer email from customerId
+            notificationService.sendEmail("customer@globaltrade.com", "Order Shipped", "Your order " + order.getOrderId() + " is now shipped and on its way!");
+        }
+        return order;
     }
 
     public ShippingOrder assignVendor(Long orderId, Long vendorId, Long opsAssigneeId, String opsAssigneeName) {
@@ -91,6 +145,11 @@ public class OpsServiceBean {
         }
     }
 }
+
+
+
+
+
 
 
 
