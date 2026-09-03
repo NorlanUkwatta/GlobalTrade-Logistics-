@@ -185,8 +185,7 @@ public class UserServiceBean implements UserService {
     @Override
     @PermitAll
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public User registerVendor(String username, String email, String fullName,
-                               String rawPassword, String companyName, String phone) {
+    public User registerVendor(String username, String email, String fullName, String rawPassword, String companyName, String phone, String registrationNumber, String headquartersAddress, Long commodityCategoryId, Integer standardLeadTimeDays, String pickupAddressLine1, String pickupAddressLine2, String pickupCity, String pickupState, String pickupPostalCode, String pickupCountry) {
 
         String normUsername = username.trim().toLowerCase();
         String normEmail    = email.trim().toLowerCase();
@@ -196,7 +195,7 @@ public class UserServiceBean implements UserService {
         validatePasswordPolicy(rawPassword);
 
         // Create Vendor record first
-        Vendor vendor = vendorService.createVendor(companyName, fullName.trim(), normEmail, phone);
+        Vendor vendor = vendorService.createVendor(companyName, fullName.trim(), normEmail, phone, registrationNumber, headquartersAddress, commodityCategoryId, standardLeadTimeDays, pickupAddressLine1, pickupAddressLine2, pickupCity, pickupState, pickupPostalCode, pickupCountry);
 
         // Build User entity
         User user = new User();
@@ -409,3 +408,4 @@ public class UserServiceBean implements UserService {
         return tempPass;
     }
 }
+

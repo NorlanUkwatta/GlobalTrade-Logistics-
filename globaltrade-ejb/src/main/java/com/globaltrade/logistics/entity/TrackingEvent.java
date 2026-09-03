@@ -17,6 +17,7 @@ public class TrackingEvent implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipment_id", nullable = false)
+    @jakarta.json.bind.annotation.JsonbTransient
     private Shipment shipment;
 
     @Enumerated(EnumType.STRING)

@@ -13,7 +13,8 @@ import java.util.UUID;
 })
 public class ShippingOrder implements Serializable {
 
-    public enum Status { PENDING, IN_PROGRESS, IN_WAREHOUSE, SHIPPED, RECEIVED_SHIPMENT, ON_DELIVERY, DELIVERED, RETURNED, CANCELLED }
+        public enum Status { PENDING, IN_PROGRESS, IN_WAREHOUSE, SHIPPED, RECEIVED_SHIPMENT, ON_DELIVERY, DELIVERED, RETURNED, CANCELLED }
+    public enum VendorDecision { PENDING, ACCEPTED, REJECTED, PROPOSED_DATE }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,7 +51,7 @@ public class ShippingOrder implements Serializable {
     @Column(length = 100)
     private String country;
 
-    @Column(name = "order_description", length = 1000)
+    @Column(name = "order_description", length = 2000)
     private String orderDescription;
 
     private Double weight;
@@ -71,7 +72,23 @@ public class ShippingOrder implements Serializable {
     @Column(nullable = false, length = 20)
     private Status status = Status.PENDING;
 
-        @Column(name = "customer_id")
+        @Enumerated(EnumType.STRING)
+    @Column(name = "vendor_decision", length = 20)
+    private VendorDecision vendorDecision;
+
+    @Column(name = "vendor_decision_reason", length = 500)
+    private String vendorDecisionReason;
+
+    @Column(name = "vendor_proposed_date", length = 50)
+    private String vendorProposedDate;
+
+    @Column(name = "product_design_doc_url", columnDefinition = "LONGTEXT")
+    private String productDesignDocUrl;
+
+    @Column(name = "quality_standards_doc_url", columnDefinition = "LONGTEXT")
+    private String qualityStandardsDocUrl;
+
+    @Column(name = "customer_id")
     private Long customerId;
 
     public Long getCustomerId() { return customerId; }
@@ -146,4 +163,34 @@ public class ShippingOrder implements Serializable {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public VendorDecision getVendorDecision() { return vendorDecision; }
+    public void setVendorDecision(VendorDecision vendorDecision) { this.vendorDecision = vendorDecision; }
+
+    public String getVendorDecisionReason() { return vendorDecisionReason; }
+    public void setVendorDecisionReason(String vendorDecisionReason) { this.vendorDecisionReason = vendorDecisionReason; }
+
+    public String getVendorProposedDate() { return vendorProposedDate; }
+    public void setVendorProposedDate(String vendorProposedDate) { this.vendorProposedDate = vendorProposedDate; }
+
+        @Column(name = "ops_assignee_id")
+    private Long opsAssigneeId;
+
+    @Column(name = "ops_assignee_name", length = 150)
+    private String opsAssigneeName;
+
+    public Long getOpsAssigneeId() { return opsAssigneeId; }
+    public void setOpsAssigneeId(Long opsAssigneeId) { this.opsAssigneeId = opsAssigneeId; }
+
+    public String getOpsAssigneeName() { return opsAssigneeName; }
+    public void setOpsAssigneeName(String opsAssigneeName) { this.opsAssigneeName = opsAssigneeName; }
+
+    public String getProductDesignDocUrl() { return productDesignDocUrl; }
+    public void setProductDesignDocUrl(String productDesignDocUrl) { this.productDesignDocUrl = productDesignDocUrl; }
+
+    public String getQualityStandardsDocUrl() { return qualityStandardsDocUrl; }
+    public void setQualityStandardsDocUrl(String qualityStandardsDocUrl) { this.qualityStandardsDocUrl = qualityStandardsDocUrl; }
 }
+
+
+

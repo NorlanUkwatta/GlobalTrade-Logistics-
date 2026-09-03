@@ -305,14 +305,27 @@
                             <input type="text" class="form-control" id="ordMobile" required>
                         </div>
                     </div>
+                    
+                    <h6 class="fw-bold mt-4 mb-3 border-bottom pb-2">Reference Documents</h6>
                     <div class="mb-3">
-                        <label class="form-label text-muted small fw-bold">EXPECTED TIMELINE</label>
-                        <select class="form-select" id="ordTimeline" required>
-                            <option value="">Select Timeline</option>
-                            <option value="Urgent (1-2 Days)">Urgent (1-2 Days)</option>
-                            <option value="Express (3-5 Days)">Express (3-5 Days)</option>
-                            <option value="Standard (7-14 Days)">Standard (7-14 Days)</option>
-                        </select>
+                        <label class="form-label text-muted small fw-bold">PRODUCT DESIGN DOCUMENT (URL)</label>
+                        <input type="url" class="form-control" id="ordDesignDoc" placeholder="e.g. Google Drive Link">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">EXPECTED QUALITY STANDARDS (URL)</label>
+                        <input type="url" class="form-control" id="ordQualityDoc" placeholder="e.g. Dropbox Link">
+                    </div>
+
+                    <h6 class="fw-bold mt-4 mb-3 border-bottom pb-2">Delivery Details</h6>
+                                        <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">EXPECT TO START ORDER</label>
+                            <input type="date" class="form-control" id="ordTimelineStart" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">EXPECT TO RECEIVE ORDER</label>
+                            <input type="date" class="form-control" id="ordTimelineEnd" required>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">DESTINATION FACILITY / ADDRESS</label>
@@ -389,6 +402,14 @@ let returnModal = null;
 let knownShipmentStatuses = {};
 let firstCustLoad = true;
 let custPollingInterval;
+let knownCustDecisions = new Set();
+
+
+function showCustToast(message) {
+    document.getElementById('custToastBody').innerText = message;
+    const toast = new bootstrap.Toast(document.getElementById('custToast'));
+    toast.show();
+}
 
 function showCustToast(message) {
     document.getElementById('custToastBody').innerText = message;
@@ -456,6 +477,13 @@ async function loadOrders() {
         const d = await res.json();
         let newHtml = '';
         d.data.forEach(o => {
+            if (o.vendorDecision) {
+                const decKey = o.id + '_' + o.vendorDecision;
+                if (!firstCustLoad && !knownCustDecisions.has(decKey)) {
+                    showCustToast("Vendor for Order #" + o.orderId + " has responded: " + o.vendorDecision);
+                }
+                knownCustDecisions.add(decKey);
+            }
             let actions = '';
             if (o.status === 'PENDING') {
                 actions += `<button class="btn btn-sm btn-outline-warning me-2" onclick="cancelOrder(\${o.id})">Cancel</button>`;
@@ -628,7 +656,9 @@ async function submitOrder() {
         customerFullName: document.getElementById('ordName').value,
         orderDescription: document.getElementById('ordDesc').value,
         itemCount: parseInt(document.getElementById('ordCount').value),
-        expectedTimeline: document.getElementById('ordTimeline').value,
+        productDesignDocUrl: document.getElementById('ordDesignDoc').value || null,
+        qualityStandardsDocUrl: document.getElementById('ordQualityDoc').value || null,
+        expectedTimeline: (document.getElementById('ordTimelineStart').value + ' to ' + document.getElementById('ordTimelineEnd').value),
         mobile: document.getElementById('ordMobile').value,
         addressLine1: document.getElementById('ordLine1').value,
         city: document.getElementById('ordCity').value,
@@ -680,6 +710,24 @@ async function submitReturn() {
 
 document.addEventListener('DOMContentLoaded', loadPortal);
 </script>
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+  <div id="custToast" class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="custToastBody">
+        Notification
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
+
+
+
+
+
+
+
 

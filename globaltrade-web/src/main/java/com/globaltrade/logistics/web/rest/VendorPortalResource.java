@@ -18,6 +18,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Path("/vendor-portal")
 @Produces(MediaType.APPLICATION_JSON)
@@ -62,14 +63,21 @@ public class VendorPortalResource {
         return Response.ok(ApiResponse.success(orders)).build();
     }
 
-    @PUT
-    @Path("/orders/{id}/acknowledge")
+    @POST
+    @Path("/orders/{id}/decision")
     @RolesAllowed("VENDOR_REP")
-    public Response acknowledgeOrder(@PathParam("id") Long id, @QueryParam("proposedDate") String proposedDateStr) {
-        LocalDate proposedDate = (proposedDateStr != null && !proposedDateStr.isEmpty()) ? LocalDate.parse(proposedDateStr) : null;
-        PurchaseOrder po = warehouseService.acknowledgePurchaseOrder(id, proposedDate);
-        String msg = proposedDate != null ? "New delivery date proposed." : "Order acknowledged.";
-        return Response.ok(ApiResponse.success(msg, po)).build();
+    public Response submitDecision(@PathParam("id") Long id, Map<String, String> payload) {
+        ShippingOrder order = vendorPortalService.getShippingOrder(id, getVendorUser().getVendorId());
+        if(order == null) return Response.status(404).entity(ApiResponse.error("Order not found")).build();
+        
+        String decision = payload.get("decision");
+        String reason = payload.get("reason");
+        String date = payload.get("proposedDate");
+        
+        ShippingOrder.VendorDecision dec = ShippingOrder.VendorDecision.valueOf(decision);
+        order = vendorPortalService.submitVendorDecision(id, dec, reason, date);
+        
+        return Response.ok(ApiResponse.success(order)).build();
     }
 
     @POST
@@ -174,15 +182,6 @@ public class VendorPortalResource {
         return Response.ok(ApiResponse.success(orders)).build();
     }
 
-    @POST
-    @Path("/shipping-orders")
-    @RolesAllowed("VENDOR_REP")
-    public Response createShippingOrder(ShippingOrder order) {
-        User user = getVendorUser();
-        ShippingOrder created = vendorPortalService.createShippingOrder(user.getVendorId(), order);
-        return Response.ok(ApiResponse.success("Shipping order created successfully.", created)).build();
-    }
-
     @GET
     @Path("/returns")
     @RolesAllowed("VENDOR_REP")
@@ -192,3 +191,6 @@ public class VendorPortalResource {
         return Response.ok(ApiResponse.success(returns)).build();
     }
 }
+
+
+

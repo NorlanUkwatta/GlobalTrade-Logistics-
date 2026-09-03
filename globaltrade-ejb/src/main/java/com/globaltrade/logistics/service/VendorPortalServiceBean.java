@@ -76,34 +76,58 @@ public class VendorPortalServiceBean implements VendorPortalService {
         vendor.setPickupState(updatedData.getPickupState());
         vendor.setPickupPostalCode(updatedData.getPickupPostalCode());
         vendor.setPickupCountry(updatedData.getPickupCountry());
+        vendor.setRegistrationNumber(updatedData.getRegistrationNumber());
+        vendor.setHeadquartersAddress(updatedData.getHeadquartersAddress());
+        vendor.setStandardLeadTimeDays(updatedData.getStandardLeadTimeDays());
+        
+        // We do not update the commodity category here to prevent unauthorized changes 
+        // without Ops approval, but the fields are synced.
 
         return em.merge(vendor);
     }
 
     @Override
+    public ShippingOrder updateVendorDecision(Long vendorId, Long orderId, ShippingOrder.VendorDecision decision, String reason, String proposedDate) {
+        ShippingOrder order = em.find(ShippingOrder.class, orderId);
+        if (order == null || order.getVendor() == null || !order.getVendor().getId().equals(vendorId)) {
+            throw new IllegalArgumentException("Order not found or not assigned to this vendor");
+        }
+        order.setVendorDecision(decision);
+        order.setVendorDecisionReason(reason);
+        order.setVendorProposedDate(proposedDate);
+        return order;
+    }
+
+    @Override
+        public ShippingOrder getShippingOrder(Long id, Long vendorId) {
+        ShippingOrder order = em.find(ShippingOrder.class, id);
+        if (order != null && order.getVendor() != null && order.getVendor().getId().equals(vendorId)) {
+            return order;
+        }
+        return null;
+    }
+
+    public ShippingOrder submitVendorDecision(Long id, ShippingOrder.VendorDecision decision, String reason, String date) {
+        ShippingOrder order = em.find(ShippingOrder.class, id);
+        if(order != null) {
+            order.setVendorDecision(decision);
+            order.setVendorDecisionReason(reason);
+            order.setVendorProposedDate(date);
+            if (decision == ShippingOrder.VendorDecision.ACCEPTED) {
+                order.setStatus(ShippingOrder.Status.IN_WAREHOUSE);
+            } else if (decision == ShippingOrder.VendorDecision.REJECTED) {
+                order.setStatus(ShippingOrder.Status.PENDING);
+                order.setVendor(null); // Unassign the vendor so ops can reassign
+            }
+            em.merge(order);
+        }
+        return order;
+    }
+
     public List<ShippingOrder> getShippingOrders(Long vendorId) {
         return em.createNamedQuery("ShippingOrder.findByVendor", ShippingOrder.class)
             .setParameter("vendorId", vendorId)
             .getResultList();
-    }
-
-    @Override
-    public ShippingOrder createShippingOrder(Long vendorId, ShippingOrder order) {
-        Vendor vendor = em.find(Vendor.class, vendorId);
-        if (vendor == null) return null;
-        
-        // Auto-generate routing details
-        String fromCity = (vendor.getPickupCity() != null && !vendor.getPickupCity().isEmpty()) ? vendor.getPickupCity() : "Origin";
-        String fromCountry = (vendor.getPickupCountry() != null && !vendor.getPickupCountry().isEmpty()) ? vendor.getPickupCountry() : "";
-        order.setRouteFrom(fromCity + (fromCountry.isEmpty() ? "" : ", " + fromCountry));
-
-        String toCity = (order.getCity() != null && !order.getCity().isEmpty()) ? order.getCity() : "Destination";
-        String toCountry = (order.getCountry() != null && !order.getCountry().isEmpty()) ? order.getCountry() : "";
-        order.setRouteTo(toCity + (toCountry.isEmpty() ? "" : ", " + toCountry));
-
-        order.setVendor(vendor);
-        em.persist(order);
-        return order;
     }
 
     @Override
@@ -113,3 +137,5 @@ public class VendorPortalServiceBean implements VendorPortalService {
             .getResultList();
     }
 }
+
+

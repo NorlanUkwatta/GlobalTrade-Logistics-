@@ -10,17 +10,32 @@
           rel="stylesheet" crossorigin="anonymous"/>
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+    <!-- Google Fonts for Premium Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background: linear-gradient(135deg, #0d1b2a 0%, #1b4332 100%); min-height: 100vh; }
-        .login-card { border: none; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-        .login-header { background: linear-gradient(135deg, #1a6b3c, #0d4a2a); border-radius: 16px 16px 0 0; padding: 2rem; }
-        .login-header img { filter: brightness(0) invert(1); }
-        .brand-title { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px; }
-        .brand-sub { font-size: 0.8rem; opacity: 0.8; }
-        .btn-login { background: linear-gradient(135deg, #1a6b3c, #155730); border: none; padding: 0.75rem; font-weight: 600; font-size: 1rem; }
-        .btn-login:hover { background: linear-gradient(135deg, #155730, #0d4a2a); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .form-control:focus { border-color: #1a6b3c; box-shadow: 0 0 0 0.2rem rgba(26,107,60,0.25); }
+        :root {
+            --gt-dark: #0f172a;
+            --gt-primary: #d97706; /* Elegant amber/gold */
+            --gt-card-bg: rgba(255, 255, 255, 0.98);
+        }
+        body { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .login-card { background: var(--gt-card-bg); border: none; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); color: #334155; }
+        .login-header { background: transparent; border-radius: 16px 16px 0 0; padding: 2rem; border-bottom: 1px solid #e2e8f0; }
+        .login-header i { color: var(--gt-primary) !important; }
+        .brand-title { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px; color: #0f172a; }
+        .brand-sub { font-size: 0.8rem; color: #64748b; }
+        .btn-login { background: var(--gt-primary); border: none; padding: 0.75rem; font-weight: 600; font-size: 1rem; border-radius: 8px; color: #fff; }
+        .btn-login:hover { background: #b45309; color: #fff; }
+        .form-control, .form-select { border-radius: 8px; padding: 0.75rem 1rem; border-color: #e2e8f0; font-size: 0.95rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--gt-primary); box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1); }
         .spinner-border-sm { display: none; }
+        .role-badge { font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 6px; font-weight: 600; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+        .text-success { color: var(--gt-primary) !important; }
+        a.text-success:hover { color: #b45309 !important; }
+        .card-footer { border-top: 1px solid #e2e8f0; background: transparent; color: #94a3b8 !important; }
+        .form-label { font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-outline-secondary { border-color: #e2e8f0; color: #64748b; }
+        .btn-outline-secondary:hover { background: #f8fafc; color: #334155; }
     </style>
 </head>
 <body class="d-flex align-items-center justify-content-center py-5">
@@ -28,7 +43,7 @@
 
     <div class="card login-card">
         <!-- Header -->
-        <div class="login-header text-white text-center">
+        <div class="login-header text-center">
             <i class="bi bi-truck-flatbed" style="font-size: 2.5rem;"></i>
             <div class="brand-title mt-2">GlobalTrade Logistics</div>
             <div class="brand-sub">Vendor Registration Portal</div>

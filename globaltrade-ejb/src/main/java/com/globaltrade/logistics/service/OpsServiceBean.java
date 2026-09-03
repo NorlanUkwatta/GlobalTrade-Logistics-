@@ -8,6 +8,9 @@ import java.util.List;
 
 @Stateless
 public class OpsServiceBean {
+    public void executeNative(String sql) {
+        em.createNativeQuery(sql).executeUpdate();
+    }
 
     @PersistenceContext(unitName = "GlobalTradeLogisticsPU")
     private EntityManager em;
@@ -22,7 +25,7 @@ public class OpsServiceBean {
                  .getResultList();
     }
 
-    public ShippingOrder assignVendor(Long orderId, Long vendorId) {
+    public ShippingOrder assignVendor(Long orderId, Long vendorId, Long opsAssigneeId, String opsAssigneeName) {
         ShippingOrder order = em.find(ShippingOrder.class, orderId);
         if (order == null) throw new IllegalArgumentException("Order not found");
         
@@ -30,6 +33,8 @@ public class OpsServiceBean {
         if (vendor == null) throw new IllegalArgumentException("Vendor not found");
 
         order.setVendor(vendor);
+            order.setOpsAssigneeId(opsAssigneeId);
+            order.setOpsAssigneeName(opsAssigneeName);
         order.setRouteFrom(vendor.getPickupCity() + ", " + vendor.getPickupCountry());
         
         // Also map the payment to this vendor if it exists
@@ -66,4 +71,25 @@ public class OpsServiceBean {
         return em.createQuery("SELECT v FROM Vendor v ORDER BY v.companyName ASC", Vendor.class)
                  .getResultList();
     }
+
+    public List<CommodityCategory> getAllCommodityCategories() {
+        return em.createQuery("SELECT c FROM CommodityCategory c ORDER BY c.name ASC", CommodityCategory.class)
+                 .getResultList();
+    }
+
+    public CommodityCategory createCommodityCategory(String name, String description) {
+        CommodityCategory cat = new CommodityCategory(name, description);
+        em.persist(cat);
+        return cat;
+    }
+
+    public void deleteCommodityCategory(Long id) {
+        CommodityCategory cat = em.find(CommodityCategory.class, id);
+        if (cat != null) {
+            em.remove(cat);
+        }
+    }
 }
+
+
+

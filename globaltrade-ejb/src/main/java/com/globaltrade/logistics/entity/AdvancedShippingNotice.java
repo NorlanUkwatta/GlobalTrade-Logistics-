@@ -14,6 +14,7 @@ public class AdvancedShippingNotice implements Serializable {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "purchase_order_id", nullable = false)
+    @jakarta.json.bind.annotation.JsonbTransient
     private PurchaseOrder purchaseOrder;
 
     private String dimensions;

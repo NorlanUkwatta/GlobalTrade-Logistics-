@@ -10,12 +10,32 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import com.globaltrade.logistics.service.local.UserService;
+import com.globaltrade.logistics.entity.User;
 
 @Path("/ops")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @PermitAll
 public class OpsResource {
+    @Context
+    private SecurityContext securityContext;
+
+    @Inject
+    private UserService userService;
+    @GET
+    @Path("/fixdb")
+    public Response fixDb() {
+        try {
+            opsService.executeNative("ALTER TABLE shipping_orders MODIFY COLUMN product_design_doc_url VARCHAR(2000)");
+            opsService.executeNative("ALTER TABLE shipping_orders MODIFY COLUMN quality_standards_doc_url VARCHAR(2000)");
+            return Response.ok("DB Fixed").build();
+        } catch (Exception e) {
+            return Response.serverError().entity(e.getMessage()).build();
+        }
+    }
 
     @Inject
     private OpsServiceBean opsService;
@@ -51,7 +71,8 @@ public class OpsResource {
     @PUT
     @Path("/orders/{id}/assign")
     public Response assignVendor(@PathParam("id") Long orderId, @QueryParam("vendorId") Long vendorId) {
-        ShippingOrder order = opsService.assignVendor(orderId, vendorId);
+        User opsUser = userService.findByUsernameForAuth(securityContext.getUserPrincipal().getName());
+        ShippingOrder order = opsService.assignVendor(orderId, vendorId, opsUser.getId(), opsUser.getFullName());
         return Response.ok(ApiResponse.success(order)).build();
     }
 
@@ -80,5 +101,26 @@ public class OpsResource {
         Shipment shipment = opsService.updateShipmentStatus(id, status);
         return Response.ok(ApiResponse.success(shipment)).build();
     }
+    @GET
+    @Path("/categories")
+    @PermitAll
+    public Response getCategories() {
+        return Response.ok(ApiResponse.success(opsService.getAllCommodityCategories())).build();
+    }
+
+    @POST
+    @Path("/categories")
+    public Response createCategory(com.globaltrade.logistics.entity.CommodityCategory cat) {
+        return Response.ok(ApiResponse.success(opsService.createCommodityCategory(cat.getName(), cat.getDescription()))).build();
+    }
+
+    @DELETE
+    @Path("/categories/{id}")
+    public Response deleteCategory(@PathParam("id") Long id) {
+        opsService.deleteCommodityCategory(id);
+        return Response.ok(ApiResponse.success("Category deleted")).build();
+    }
 }
+
+
 

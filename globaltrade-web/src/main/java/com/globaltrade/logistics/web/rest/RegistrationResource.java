@@ -70,8 +70,7 @@ public class RegistrationResource {
             request.email(),
             request.fullName(),
             request.password(),
-            request.companyName(),
-            request.phone()
+            request.companyName(), request.phone(), request.registrationNumber(), request.headquartersAddress(), request.commodityCategoryId(), request.standardLeadTimeDays(), request.pickupAddressLine1(), request.pickupAddressLine2(), request.pickupCity(), request.pickupState(), request.pickupPostalCode(), request.pickupCountry()
         );
 
         LOG.info("[REGISTRATION] New vendor registered: {}", registered.getUsername());
@@ -81,3 +80,4 @@ public class RegistrationResource {
             .build();
     }
 }
+

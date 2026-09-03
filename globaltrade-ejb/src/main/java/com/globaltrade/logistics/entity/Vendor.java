@@ -54,6 +54,20 @@ public class Vendor implements Serializable {
     @Column(name = "pickup_country")
     private String pickupCountry;
 
+    @Column(name = "registration_number", length = 100)
+    private String registrationNumber;
+
+    @Column(name = "headquarters_address", length = 255)
+    private String headquartersAddress;
+
+    @jakarta.json.bind.annotation.JsonbTransient
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "commodity_category_id")
+    private CommodityCategory commodityCategory;
+
+    @Column(name = "standard_lead_time_days")
+    private Integer standardLeadTimeDays;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -91,4 +105,12 @@ public class Vendor implements Serializable {
     public void setPickupPostalCode(String pickupPostalCode) { this.pickupPostalCode = pickupPostalCode; }
     public String getPickupCountry() { return pickupCountry; }
     public void setPickupCountry(String pickupCountry) { this.pickupCountry = pickupCountry; }
+    public String getRegistrationNumber() { return registrationNumber; }
+    public void setRegistrationNumber(String registrationNumber) { this.registrationNumber = registrationNumber; }
+    public String getHeadquartersAddress() { return headquartersAddress; }
+    public void setHeadquartersAddress(String headquartersAddress) { this.headquartersAddress = headquartersAddress; }
+    public CommodityCategory getCommodityCategory() { return commodityCategory; }
+    public void setCommodityCategory(CommodityCategory commodityCategory) { this.commodityCategory = commodityCategory; }
+    public Integer getStandardLeadTimeDays() { return standardLeadTimeDays; }
+    public void setStandardLeadTimeDays(Integer standardLeadTimeDays) { this.standardLeadTimeDays = standardLeadTimeDays; }
 }

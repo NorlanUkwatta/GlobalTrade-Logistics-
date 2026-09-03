@@ -62,8 +62,7 @@ public interface UserService {
     /**
      * Registers a new vendor account publicly.
      */
-    User registerVendor(String username, String email, String fullName,
-                        String rawPassword, String companyName, String phone);
+    User registerVendor(String username, String email, String fullName, String rawPassword, String companyName, String phone, String registrationNumber, String headquartersAddress, Long commodityCategoryId, Integer standardLeadTimeDays, String pickupAddressLine1, String pickupAddressLine2, String pickupCity, String pickupState, String pickupPostalCode, String pickupCountry);
 
     /**
      * Updates mutable profile fields for an existing user.
@@ -115,3 +114,4 @@ public interface UserService {
      */
     void updateLastLogin(Long userId);
 }
+

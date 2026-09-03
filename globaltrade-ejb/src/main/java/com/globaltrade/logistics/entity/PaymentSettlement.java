@@ -17,10 +17,12 @@ public class PaymentSettlement implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vendor_id")
+    @jakarta.json.bind.annotation.JsonbTransient
     private Vendor vendor;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "purchase_order_id")
+    @jakarta.json.bind.annotation.JsonbTransient
     private PurchaseOrder purchaseOrder;
 
         @ManyToOne(fetch = FetchType.LAZY)

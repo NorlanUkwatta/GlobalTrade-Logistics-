@@ -10,7 +10,12 @@ public interface VendorPortalService {
 
     // New Profile & Shipping Order methods
     Vendor updateProfile(Long vendorId, Vendor updatedData);
+    ShippingOrder updateVendorDecision(Long vendorId, Long orderId, ShippingOrder.VendorDecision decision, String reason, String proposedDate);
+        ShippingOrder getShippingOrder(Long id, Long vendorId);
+    ShippingOrder submitVendorDecision(Long id, ShippingOrder.VendorDecision decision, String reason, String date);
     List<ShippingOrder> getShippingOrders(Long vendorId);
-    ShippingOrder createShippingOrder(Long vendorId, ShippingOrder order);
+
     List<ReturnedItem> getReturnedItems(Long vendorId);
 }
+
+

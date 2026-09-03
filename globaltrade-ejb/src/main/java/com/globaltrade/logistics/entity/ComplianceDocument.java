@@ -17,6 +17,7 @@ public class ComplianceDocument implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vendor_id", nullable = false)
+    @jakarta.json.bind.annotation.JsonbTransient
     private Vendor vendor;
 
     @Column(nullable = false)

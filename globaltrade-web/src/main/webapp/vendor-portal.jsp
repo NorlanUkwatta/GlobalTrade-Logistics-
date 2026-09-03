@@ -6,22 +6,37 @@
     <title>Supplier Portal - GlobalTrade Logistics</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Google Fonts for Premium Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar { width: 260px; background: #0d1b2a; min-height: 100vh; position: fixed; top: 0; left: 0; }
-        .sidebar .brand { padding: 1.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar .brand-title { color: #fff; font-size: 1rem; font-weight: 700; }
-        .sidebar .nav-link { color: rgba(255,255,255,0.75); padding: 0.65rem 1.25rem; border-radius: 8px; margin: 0.15rem 0.5rem; cursor: pointer; }
-        .sidebar .nav-link.active { background: rgba(255,255,255,0.12); color: #fff; }
+        :root {
+            --gt-dark: #0f172a;
+            --gt-primary: #d97706; /* Elegant amber/gold */
+            --gt-card-bg: rgba(255, 255, 255, 0.98);
+        }
+        body { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .sidebar { width: 260px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); min-height: 100vh; position: fixed; top: 0; left: 0; border-right: 1px solid rgba(255,255,255,0.05); }
+        .sidebar .brand { padding: 1.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar .brand-title { color: #f8fafc; font-size: 1rem; font-weight: 700; letter-spacing: 0.5px; }
+        .sidebar .nav-link { color: #94a3b8; padding: 0.65rem 1.25rem; border-radius: 8px; margin: 0.15rem 0.5rem; cursor: pointer; transition: all 0.3s ease; }
+        .sidebar .nav-link:hover { color: #f8fafc; background: rgba(255,255,255,0.02); }
+        .sidebar .nav-link.active { background: rgba(217, 119, 6, 0.15); color: var(--gt-primary); border-right: 3px solid var(--gt-primary); }
         .main-content { margin-left: 260px; padding: 1.5rem 2rem; }
-        .kpi-card { background: #fff; border-radius: 12px; padding: 1.5rem; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 1rem; }
+        .kpi-card { background: var(--gt-card-bg); border-radius: 16px; padding: 1.5rem; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); margin-bottom: 1rem; color: #334155; }
         .kanban-board { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; }
-        .kanban-col { background: #e9ecef; border-radius: 8px; min-width: 320px; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
-        .po-card { background: #fff; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.1); border-left: 4px solid #0d6efd; }
+        .kanban-col { background: rgba(255,255,255,0.05); border-radius: 12px; min-width: 320px; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+        .po-card { background: var(--gt-card-bg); border-radius: 12px; padding: 1.2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 4px solid var(--gt-primary); color: #334155; }
         .po-card.delay { border-left-color: #dc3545; }
-        .po-card.ready { border-left-color: #198754; }
+        .po-card.ready { border-left-color: #10b981; }
         .content-section { display: none; }
         .content-section.active { display: block; }
+        .table-card { background: var(--gt-card-bg); border-radius: 16px; padding: 2.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.3); color: #334155; }
+        .table-light th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; padding: 1rem; }
+        .table td { border-bottom: 1px solid #f1f5f9; vertical-align: middle; padding: 1rem; color: #334155; }
+        h4, h6 { color: #f8fafc; }
+        .po-card h6, .po-card p, .kpi-card h6, .kpi-card h3, .table-card h4, .table-card h6, .bg-light h6 { color: #334155 !important; }
+        .text-dark { color: #0f172a !important; }
+        .topbar { background: var(--gt-card-bg); border-radius: 12px; padding: 0.8rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; color: #334155; }
     </style>
 </head>
 <body>
@@ -60,8 +75,8 @@
 </nav>
 
 <main class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0 fw-bold" id="pageTitle">Purchase Orders</h4>
+    <div class="topbar">
+        <h4 class="mb-0 fw-bold" id="pageTitle" style="color: #0f172a !important;">Purchase Orders</h4>
         <span class="badge bg-secondary fs-6" id="userNameDisplay">Vendor Rep</span>
     </div>
 
@@ -92,6 +107,30 @@
             </div>
         </div>
 
+                <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold">Assigned Orders</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer Name</th>
+                                <th>Item Count</th>
+                                <th>Assigned By (Ops)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assignedOrdersTbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
         <div class="kanban-board">
             <div class="kanban-col">
                 <h6 class="fw-bold mb-3"><i class="bi bi-inbox me-2"></i>New Orders (Pending)</h6>
@@ -442,17 +481,23 @@ async function loadPortal() {
         document.getElementById('profCountry').value = p.pickupCountry || '';
     }
 
-    // 3. Load Purchase Orders (Kanban)
-    const poRes = await apiCall(CTX + '/api/vendor-portal/orders');
-    if (poRes && poRes.ok) {
-        const d = await poRes.json();
-        renderKanban(d.data);
-    }
-    
-    // 4. Load Shipping Orders
     const soRes = await apiCall(CTX + '/api/vendor-portal/shipping-orders');
     if (soRes && soRes.ok) {
         const d = await soRes.json();
+        currentShippingOrders = d.data;
+        
+        let currentIds = new Set();
+        d.data.forEach(o => {
+            currentIds.add(o.id);
+            if (!firstVendorLoad && !knownVendorOrderIds.has(o.id)) {
+                showVendorToast("New Requisition Assigned: " + o.orderId);
+            }
+        });
+        knownVendorOrderIds = currentIds;
+        firstVendorLoad = false;
+        
+        renderKanban(d.data);
+        renderAssignedOrdersTable();
         renderShippingOrders(d.data);
     }
 
@@ -461,6 +506,11 @@ async function loadPortal() {
     if (retRes && retRes.ok) {
         const d = await retRes.json();
         renderReturns(d.data);
+    }
+    if (!vendorPollingInterval) {
+        vendorPollingInterval = setInterval(() => {
+            loadPortal();
+        }, 3000);
     }
 }
 
@@ -561,6 +611,72 @@ function renderReturns(returns) {
             </tr>
         `;
     });
+}
+
+function renderAssignedOrdersTable() {
+    const tbody = document.getElementById('assignedOrdersTbody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    
+    // currentShippingOrders has the assigned shipping orders
+    const assigned = currentShippingOrders.filter(o => o.vendorDecision === 'PENDING');
+    if (assigned.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No pending assigned orders</td></tr>';
+        return;
+    }
+
+    assigned.forEach(o => {
+        const opsName = o.opsAssigneeName || 'Ops Team';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${o.orderId}</strong></td>
+            <td>${o.customerFullName}</td>
+            <td>${o.itemCount || 0}</td>
+            <td><span class="badge bg-secondary">${opsName}</span></td>
+            <td><span class="badge bg-warning text-dark">PENDING</span></td>
+            <td>
+                <button class="btn btn-sm btn-success me-1" onclick="submitDecision('${o.orderId}', 'ACCEPTED')">Confirm</button>
+                <button class="btn btn-sm btn-danger me-1" onclick="promptReject('${o.orderId}')">Cancel</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails('${o.orderId}')">View Details</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function viewOrderDetails(orderId) {
+    const o = currentShippingOrders.find(x => x.orderId === orderId);
+    if(!o) return;
+    document.getElementById('voId').innerText = o.orderId;
+    document.getElementById('voCustomerName').innerText = o.customerFullName || 'N/A';
+    document.getElementById('voItemCount').innerText = o.itemCount || '0';
+    document.getElementById('voDesc').innerText = o.orderDescription || 'N/A';
+    document.getElementById('voTimeline').innerText = o.expectedTimeline || 'N/A';
+    document.getElementById('voWeight').innerText = o.weight ? o.weight + ' kg' : 'N/A';
+    document.getElementById('voRouteFrom').innerText = o.routeFrom || 'N/A';
+    document.getElementById('voRouteTo').innerText = o.routeTo || 'N/A';
+    document.getElementById('voOpsName').innerText = o.opsAssigneeName || 'Ops Team';
+    document.getElementById('voStatus').innerText = o.status || 'N/A';
+    
+    new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+}
+
+async function submitDecision(orderId, decision, reason = null, proposedDate = null) {
+    const o = currentShippingOrders.find(x => x.orderId === orderId);
+    if(!o) return;
+    const req = { decision: decision, reason: reason, proposedDate: proposedDate };
+    const res = await apiCall(CTX + '/api/vendor-portal/orders/' + o.id + '/decision', 'POST', req);
+    if(res && res.ok) {
+        showVendorToast("Order " + decision.toLowerCase() + " successfully.");
+        loadPortal(); // Reload tables
+    }
+}
+
+function promptReject(orderId) {
+    const reason = prompt("Please provide a reason for cancelling/rejecting this order:");
+    if(reason) {
+        submitDecision(orderId, 'REJECTED', reason);
+    }
 }
 
 function renderKanban(pos) {
@@ -677,5 +793,59 @@ async function uploadCompliance() {
 
 document.addEventListener('DOMContentLoaded', loadPortal);
 </script>
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+  <div id="vendorToast" class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="vendorToastBody">
+        Notification
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+<!-- View Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Order Details - <span id="voId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6"><small class="text-muted">Customer Name</small><br><strong id="voCustomerName"></strong></div>
+                    <div class="col-md-6"><small class="text-muted">Item Count</small><br><strong id="voItemCount"></strong></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12"><small class="text-muted">Order Description</small><br><span id="voDesc"></span></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6"><small class="text-muted">Expected Timeline</small><br><span id="voTimeline"></span></div>
+                    <div class="col-md-6"><small class="text-muted">Weight (kg)</small><br><span id="voWeight"></span></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6"><small class="text-muted">Route From</small><br><span id="voRouteFrom"></span></div>
+                    <div class="col-md-6"><small class="text-muted">Route To</small><br><span id="voRouteTo"></span></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6"><small class="text-muted">Assigned By (Ops)</small><br><span id="voOpsName"></span></div>
+                    <div class="col-md-6"><small class="text-muted">Status</small><br><span class="badge bg-primary" id="voStatus"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+

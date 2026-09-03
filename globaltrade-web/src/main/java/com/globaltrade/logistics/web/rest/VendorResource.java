@@ -29,8 +29,18 @@ public class VendorResource {
             vendor.getCompanyName(),
             vendor.getContactName(),
             vendor.getEmail(),
-            vendor.getPhone()
+            vendor.getPhone(),
+            vendor.getRegistrationNumber(),
+            vendor.getHeadquartersAddress(),
+            vendor.getCommodityCategory() != null ? vendor.getCommodityCategory().getId() : null,
+            vendor.getStandardLeadTimeDays(),
+            vendor.getPickupAddressLine1(),
+            vendor.getPickupAddressLine2(),
+            vendor.getPickupCity(),
+            vendor.getPickupState(),
+            vendor.getPickupPostalCode(),
+            vendor.getPickupCountry()
         );
-        return Response.ok(ApiResponse.success(created)).build();
+        return Response.status(Response.Status.CREATED).entity(ApiResponse.success(created)).build();
     }
 }

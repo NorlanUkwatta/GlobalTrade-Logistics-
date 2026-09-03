@@ -15,6 +15,7 @@
         <class>com.globaltrade.logistics.entity.AdvancedShippingNotice</class>
         <class>com.globaltrade.logistics.entity.PaymentSettlement</class>
         <class>com.globaltrade.logistics.entity.ComplianceDocument</class>
+        <class>com.globaltrade.logistics.entity.CommodityCategory</class>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
             <property name="hibernate.transaction.jta.platform" value="org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform"/>
@@ -29,3 +30,4 @@
         </properties>
     </persistence-unit>
 </persistence>
+

@@ -87,7 +87,7 @@ public class ShipmentServiceBean implements ShipmentService {
     }
 
     @Override
-    @RolesAllowed({"ADMIN", "LOGISTICS_COORD"})
+    @RolesAllowed({"ADMIN", "LOGISTICS_COORD", "CUSTOMER"})
     public List<Shipment> findAll() {
         return em.createNamedQuery("Shipment.findAll", Shipment.class).getResultList();
     }
