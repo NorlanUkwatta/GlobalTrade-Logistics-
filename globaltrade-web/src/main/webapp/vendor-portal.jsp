@@ -453,14 +453,14 @@ document.querySelectorAll('#sidebarNav .nav-link').forEach(link => {
 
 // --- API Logic ---
 async function loadPortal() {
-    // 1. User & KPI Info
+    // User & KPI Info
     const meRes = await apiCall(CTX + '/api/users/me');
     if (meRes && meRes.ok) {
         const d = await meRes.json();
         document.getElementById('userNameDisplay').innerText = d.data.fullName;
     }
 
-    // 2. Load Profile
+    //  Load Profile
     const profRes = await apiCall(CTX + '/api/vendor-portal/profile');
     if (profRes && profRes.ok) {
         const p = (await profRes.json()).data;
@@ -499,7 +499,7 @@ async function loadPortal() {
         renderOrderHistoryTable();
     }
 
-    // 5. Load Returns
+    // Load Returns
     const retRes = await apiCall(CTX + '/api/vendor-portal/returns');
     if (retRes && retRes.ok) {
         const d = await retRes.json();

@@ -96,6 +96,9 @@
             <button class="nav-link" id="warehouses-tab" data-bs-toggle="tab" data-bs-target="#warehouses-pane" type="button"><i class="bi bi-building me-2"></i>Add warehouses</button>
         </li>
         <li class="nav-item">
+                    <li class="nav-item">
+            <button class="nav-link" id="subscriptions-tab" data-bs-toggle="tab" data-bs-target="#subscriptions-pane" type="button"><i class="bi bi-credit-card me-2"></i>Platform Subscriptions</button>
+        </li>
             <button class="nav-link" id="freight-calc-tab" data-bs-toggle="tab" data-bs-target="#freight-calc-pane" type="button"><i class="bi bi-calculator me-2"></i>Freight Calculator</button>
         </li>
     </ul>
@@ -272,6 +275,52 @@
             </div>
         </div>
 
+        
+        <!-- SUBSCRIPTIONS PANE -->
+        <div class="tab-pane fade" id="subscriptions-pane" role="tabpanel">
+            <div class="table-card bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="section-header">Platform & Operations Subscriptions</h3>
+                        <p class="section-sub mb-0">Manage fixed prices for platform usage subscriptions.</p>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#subscriptionModal" onclick="prepareSubscriptionForm()"><i class="bi bi-plus-circle me-1"></i>New Plan</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Plan Name</th>
+                                <th>Price (USD)</th>
+                                <th>Billing Cycle</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subscriptionsTbody">
+                            <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="table-card bg-white mt-4">
+                <h4 class="mb-3">Assign Subscription to Customer</h4>
+                <div class="row">
+                    <div class="col-md-5">
+                        <label>Customer</label>
+                        <select id="assignSubCustomer" class="form-select"></select>
+                    </div>
+                    <div class="col-md-5">
+                        <label>Subscription Plan</label>
+                        <select id="assignSubPlan" class="form-select"></select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-success w-100" onclick="assignSubscription()">Assign</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- FREIGHT CALCULATOR PANE -->
         <div class="tab-pane fade" id="freight-calc-pane" role="tabpanel">
             <div class="table-card bg-white">
@@ -394,7 +443,34 @@
             </div>
         </div>
 
-        </div></div>  <!-- Add Country Modal -->
+        </div></div>  
+    <!-- Subscription Modal -->
+    <div class="modal fade" id="subscriptionModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Subscription Plan</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="subId">
+                <div class="mb-2">
+                    <label>Plan Name</label>
+                    <input type="text" id="subName" class="form-control" placeholder="e.g. Monthly Standard">
+                </div>
+                <div class="mb-2">
+                    <label>Price (USD)</label>
+                    <input type="number" id="subPrice" class="form-control" step="0.01">
+                </div>
+                <div class="mb-2">
+                    <label>Billing Cycle</label>
+                    <select id="subCycle" class="form-select">
+                        <option value="MONTHLY">Monthly</option>
+                        <option value="YEARLY">Yearly</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="saveSubscription()" data-bs-dismiss="modal">Save</button></div>
+        </div></div>
+    </div>
+
+    <!-- Add Country Modal -->
     <div class="modal fade" id="addCountryModal" tabindex="-1">
         <div class="modal-dialog"><div class="modal-content">
             <div class="modal-header"><h5 class="modal-title">Add Country</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -505,7 +581,266 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">// ==================== FREIGHT CALCULATOR ====================
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+
+const CTX = '${pageContext.request.contextPath}';
+let vendorModal, carrierModal;
+let knownOrderIds = new Set();
+let currentOpsOrders = [];
+
+function viewOrderDetails(idStr) {
+    const id = parseInt(idStr);
+    const o = currentOpsOrders.find(x => x.id === id);
+    if(!o) return;
+    document.getElementById('opsOrdId').innerText = '#' + o.orderId;
+    document.getElementById('opsOrdCustomer').innerText = o.customerFullName;
+    document.getElementById('opsOrdMobile').innerText = o.mobileNumber || '-';
+    document.getElementById('opsOrdDesc').innerText = o.description || '-';
+    document.getElementById('opsOrdDesign').innerHTML = o.designDocumentUrl ? '<a href="' + o.designDocumentUrl + '" target="_blank">View Design Doc</a>' : 'N/A';
+    document.getElementById('opsOrdQuality').innerHTML = o.qualityStandardUrl ? '<a href="' + o.qualityStandardUrl + '" target="_blank">View Quality Standards</a>' : 'N/A';
+    
+    document.getElementById('opsOrdDecision').innerText = o.vendorDecision || 'PENDING';
+    document.getElementById('opsOrdReason').innerText = o.vendorReason || '-';
+    document.getElementById('opsOrdDate').innerText = o.vendorProposedDate || '-';
+    
+    new bootstrap.Modal(document.getElementById('opsOrderModal')).show();
+}
+let firstLoad = true;
+let opsPollingInterval;
+
+function showToast(message) {
+    document.getElementById('opsToastBody').innerText = message;
+    const toast = new bootstrap.Toast(document.getElementById('opsToast'));
+    toast.show();
+}
+
+async function apiCall(url, method='GET', body=null) {
+    let opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if(body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    if(res.status === 401) { window.location.href = CTX + '/login.jsp'; return null; }
+    return res;
+}
+
+async function doLogout() {
+    await apiCall(CTX+'/api/auth/logout', 'POST');
+    window.location.href = CTX+'/login.jsp';
+}
+
+async function loadCategories() {
+    const res = await apiCall(CTX + '/api/ops/categories');
+    if(res && res.ok) {
+        const d = await res.json();
+        let newHtml = '';
+        d.data.forEach(c => {
+            newHtml += '<tr>' +
+                    '<td class="fw-bold">CAT-' + c.id + '</td>' +
+                    '<td>' + c.name + '</td>' +
+                    '<td>' + (c.description || '-') + '</td>' +
+                    '<td class="text-end text-nowrap">' + '<button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(' + c.id + ')"><i class="bi bi-trash"></i></button>' +
+                    '</td>' +
+                '</tr>';
+        });
+        if (d.data.length === 0) newHtml = '<tr><td colspan="4" class="text-center text-muted">No categories found.</td></tr>';
+        const tbody = document.getElementById('categoriesTbody');
+        if (tbody && tbody.innerHTML !== newHtml) { tbody.innerHTML = newHtml; }
+    }
+}
+async function createCategory() {
+    const name = document.getElementById('catName').value;
+    const desc = document.getElementById('catDesc').value;
+    if(!name) return;
+    await apiCall(CTX + '/api/ops/categories', 'POST', { name: name, description: desc });
+    bootstrap.Modal.getInstance(document.getElementById('createCategoryModal')).hide();
+    document.getElementById('catName').value = '';
+    document.getElementById('catDesc').value = '';
+    loadCategories(); loadSubscriptions(); loadCustomersForAssignment(); loadCarriers();
+}
+async function deleteCategory(id) {
+    if(!confirm('Are you sure you want to delete this category?')) return;
+    await apiCall(CTX + '/api/ops/categories/' + id, 'DELETE');
+    loadCategories(); loadSubscriptions(); loadCustomersForAssignment(); loadCarriers();
+}
+
+async function loadOps() {
+    await loadOrders();
+    await loadShipments();
+            loadCategories(); loadSubscriptions(); loadCustomersForAssignment(); loadCarriers();
+    await loadCategories(); loadSubscriptions(); loadCustomersForAssignment(); loadCarriers();
+    firstLoad = false;
+    
+    // Start real-time polling every 3 seconds
+    if (!opsPollingInterval) {
+        opsPollingInterval = setInterval(() => {
+            loadOrders();
+            loadShipments();
+            loadCategories(); loadSubscriptions(); loadCustomersForAssignment(); loadCarriers();
+        }, 3000);
+    }
+}
+
+async function loadOrders() {
+    const res = await apiCall(CTX + '/api/ops/orders');
+    if(res && res.ok) {
+        const d = await res.json();
+        let newHtml = '';
+        let currentIds = new Set();
+        currentOpsOrders = d.data;
+        d.data.forEach(o => {
+            currentIds.add(o.id);
+            if (!firstLoad && !knownOrderIds.has(o.id)) {
+                showToast("Real-Time Alert: New Client Requisition Received! (Order #" + o.orderId + ")");
+            }
+            
+            let decisionHtml = '';
+            if (o.vendor) {
+                const dec = o.vendorDecision || 'PENDING';
+                let bg = 'secondary';
+                if(dec === 'ACCEPTED') bg = 'success';
+                else if(dec === 'REJECTED') bg = 'danger';
+                else if(dec === 'PROPOSED_DATE') bg = 'warning';
+                
+                decisionHtml = '<span class="badge bg-'+bg+'">'+dec+'</span>';
+                if(dec === 'REJECTED' || dec === 'PROPOSED_DATE') {
+                    if (!firstLoad && (!knownOrderIds.has(o.id + '_' + dec))) {
+                        showToast("Real-Time Alert: Vendor responded to Order #" + o.orderId + " with " + dec);
+                    }
+                    knownOrderIds.add(o.id + '_' + dec);
+                }
+            }
+            
+            let acts = '';
+            if (o.vendor) {
+                acts = '<button class="btn btn-sm btn-outline-info" onclick="viewOrderDetails(\''+o.id+'\')">View</button>' ;
+                if (o.vendorDecision === 'REJECTED' || o.vendorDecision === 'PROPOSED_DATE') {
+                    acts += '<button class="btn btn-sm btn-outline-primary ms-1" onclick="openVendorModal('+o.id+')">Reassign</button>';
+                }
+            } else {
+                acts = '<button class="btn btn-sm btn-outline-primary" onclick="openVendorModal('+o.id+')">Assign Vendor</button>';
+                acts += '<button class="btn btn-sm btn-outline-info ms-1" onclick="viewOrderDetails(\''+o.id+'\')">View</button>';
+            }
+            
+            let statusHtml = "";
+            if (o.status && o.status !== "PENDING" && o.status !== "IN_PROGRESS") {
+                statusHtml = "<br><span class=\"badge bg-info text-dark\">" + o.status.replace(/_/g, " ") + "</span>";
+            }
+            let vend = o.vendor ? o.vendor.companyName + "<br>" + decisionHtml + statusHtml : "<span class=\"text-warning\">Unassigned</span>";
+            
+            if (o.status === "READY_FOR_DELIVERY") {
+                acts += "<button class=\"btn btn-sm btn-primary ms-1\" onclick=\"assignCarrierPrompt(" + o.id + ")\">Assign Carrier</button>";
+            } else if (o.status === "ORDER_COMPLETED" || o.status === "IN_WAREHOUSE") {
+                if (!o.assignedWarehouse) {
+                    acts += "<button class=\"btn btn-sm btn-secondary ms-1\" onclick=\"assignWarehousePrompt(" + o.id + ")\">Assign Warehouse</button>";
+                }
+            }
+            
+            newHtml += "<tr>" +
+                    "<td class=\"fw-bold\">" + o.orderId + "</td>" +
+                    "<td>" + o.customerFullName + "</td>" +
+                    "<td>" + (o.itemCount || "-") + "</td>" +
+                    "<td>" + (o.weight ? o.weight + " kg" : "-") + "</td>" +
+                    "<td>" + (o.expectedTimeline || "-") + "</td>" +
+                    "<td class=\"fw-bold\">" + vend + "</td>" +
+                    "<td class=\"text-end text-nowrap\">" + acts + "</td>" +
+                "</tr>";
+        });
+        
+        knownOrderIds = currentIds;
+        
+        const tbody = document.getElementById('ordersBody');
+        if (tbody.innerHTML !== newHtml) {
+            tbody.innerHTML = newHtml;
+        }
+    }
+}
+
+async function loadShipments() {
+    const res = await apiCall(CTX + '/api/ops/shipments');
+    if(res && res.ok) {
+        const d = await res.json();
+        let newHtml = '';
+        d.data.forEach(s => {
+            let carr = s.carrierName ? s.carrierName : '<span class="text-danger small fw-bold">NO CARRIER</span>';
+            let stat = '<span class="badge bg-secondary">' + s.status.replace(/_/g, ' ') + '</span>';
+            if(s.status === 'DELIVERED') stat = '<span class="badge bg-success">DELIVERED</span>';
+            if(s.status === 'SHIPPED') stat = '<span class="badge bg-primary">SHIPPED</span>';
+            
+            newHtml += '<tr>' +
+                    '<td class="fw-bold">' + s.trackingNumber + '</td>' +
+                    '<td>' + (s.origin || '-') + ' &rarr; ' + (s.destination || '-') + '</td>' +
+                    '<td>' + stat + '</td>' +
+                    '<td class="fw-bold text-dark">' + carr + '</td>' +
+                    '<td class="text-end text-nowrap">' + '<button class="btn btn-sm btn-outline-dark" onclick="openCarrierModal('+s.id+', \''+(s.carrierName||'')+'\', \''+s.status+'\')">Manage</button>' +
+                    '</td>' +
+                '</tr>';
+        });
+        
+        const tbody = document.getElementById('shipmentsBody');
+        if (tbody.innerHTML !== newHtml) {
+            tbody.innerHTML = newHtml;
+        }
+    }
+}
+
+async function assignWarehousePrompt(id) {
+    let w = prompt("Enter Warehouse Name to assign:");
+    if(w) {
+        await apiCall(CTX + '/api/ops/orders/' + id + '/assign-warehouse', 'PUT', {warehouseName: w});
+        loadOrders();
+    }
+}
+async function openVendorModal(orderId) {
+    document.getElementById('assignOrderId').value = orderId;
+    const res = await apiCall(CTX + '/api/ops/vendors');
+    if(res && res.ok) {
+        const d = await res.json();
+        const sel = document.getElementById('vendorSelect');
+        sel.innerHTML = '<option value="">Select Vendor...</option>';
+        d.data.forEach(v => {
+            sel.innerHTML += '<option value="'+v.id+'">'+v.companyName+'</option>';
+        });
+    }
+    if(!vendorModal) vendorModal = new bootstrap.Modal(document.getElementById('assignVendorModal'));
+    vendorModal.show();
+}
+
+async function submitVendorAssign() {
+    const oid = document.getElementById('assignOrderId').value;
+    const vid = document.getElementById('vendorSelect').value;
+    if(!vid) return;
+    
+    await apiCall(CTX + '/api/ops/orders/'+oid+'/assign?vendorId='+vid, 'PUT');
+    vendorModal.hide();
+    loadOrders();
+}
+
+function openCarrierModal(shipId, currentCarrier, currentStatus) {
+    document.getElementById('manageShipmentId').value = shipId;
+    document.getElementById('carrierInput').value = currentCarrier;
+    document.getElementById('statusSelect').value = currentStatus;
+    if(!carrierModal) carrierModal = new bootstrap.Modal(document.getElementById('carrierModal'));
+    carrierModal.show();
+}
+
+async function submitLogisticsUpdate() {
+    const sid = document.getElementById('manageShipmentId').value;
+    const carr = document.getElementById('carrierInput').value;
+    const stat = document.getElementById('statusSelect').value;
+    
+    if(carr) await apiCall(CTX + '/api/ops/shipments/'+sid+'/carrier?carrier='+encodeURIComponent(carr), 'PUT');
+    await apiCall(CTX + '/api/ops/shipments/'+sid+'/status?status='+encodeURIComponent(stat), 'PUT');
+    
+    carrierModal.hide();
+    loadShipments();
+            loadCategories(); loadSubscriptions(); loadCustomersForAssignment(); loadCarriers();
+}
+
+document.addEventListener('DOMContentLoaded', loadOps);
+
+
+// ==================== FREIGHT CALCULATOR ====================
 function switchFreightMode(mode) {
     document.getElementById('lcl-form').style.display = mode === 'lcl' ? '' : 'none';
     document.getElementById('fcl-form').style.display = mode === 'fcl' ? '' : 'none';
@@ -572,6 +907,183 @@ function calculateFCL() {
     document.getElementById('freight-result').style.display = '';
 }
 // ==================== END FREIGHT CALCULATOR ====================
+
+// ==================== SUBSCRIPTIONS ====================
+let allSubs = [];
+
+async function loadSubscriptions() {
+    const res = await apiCall(CTX + '/api/billing/subscriptions');
+    if (res && res.ok) {
+        const d = await res.json();
+        allSubs = d.data;
+        const tbody = document.getElementById('subscriptionsTbody');
+        const sel = document.getElementById('assignSubPlan');
+        tbody.innerHTML = '';
+        sel.innerHTML = '<option value="">Select Plan...</option>';
+        if (allSubs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No subscription plans found.</td></tr>';
+            return;
+        }
+        allSubs.forEach(s => {
+            tbody.innerHTML += '<tr>' +
+                '<td><strong>' + s.name + '</strong></td>' +
+                '<td>$' + s.price.toFixed(2) + '</td>' +
+                '<td>' + s.billingCycle + '</td>' +
+                '<td><button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#subscriptionModal" onclick="editSubscription(' + s.id + ')">Edit</button></td>' +
+                '</tr>';
+            sel.innerHTML += '<option value="' + s.id + '">' + s.name + ' ($' + s.price + '/' + s.billingCycle + ')</option>';
+        });
+    }
+}
+
+function prepareSubscriptionForm() {
+    document.getElementById('subId').value = '';
+    document.getElementById('subName').value = '';
+    document.getElementById('subPrice').value = '';
+    document.getElementById('subCycle').value = 'MONTHLY';
+}
+
+function editSubscription(id) {
+    const sub = allSubs.find(s => s.id === id);
+    if (sub) {
+        document.getElementById('subId').value = sub.id;
+        document.getElementById('subName').value = sub.name;
+        document.getElementById('subPrice').value = sub.price;
+        document.getElementById('subCycle').value = sub.billingCycle;
+    }
+}
+
+async function saveSubscription() {
+    const id = document.getElementById('subId').value;
+    const payload = {
+        name: document.getElementById('subName').value,
+        price: parseFloat(document.getElementById('subPrice').value),
+        billingCycle: document.getElementById('subCycle').value
+    };
+    if (id) {
+        await apiCall(CTX + '/api/billing/subscriptions/' + id, 'PUT', payload);
+    } else {
+        await apiCall(CTX + '/api/billing/subscriptions', 'POST', payload);
+    }
+    loadSubscriptions();
+}
+
+async function assignSubscription() {
+    const cid = document.getElementById('assignSubCustomer').value;
+    const sid = document.getElementById('assignSubPlan').value;
+    if (!cid || !sid) {
+        alert("Please select both Customer and Plan.");
+        return;
+    }
+    await apiCall(CTX + '/api/billing/customer-subscription/' + cid + '/' + sid, 'PUT');
+    alert("Subscription assigned successfully!");
+}
+
+async function loadCustomersForAssignment() {
+    const res = await apiCall(CTX + '/api/ops/customers');
+    if (res && res.ok) {
+        const d = await res.json();
+        const sel = document.getElementById('assignSubCustomer');
+        sel.innerHTML = '<option value="">Select Customer...</option>';
+        d.data.forEach(c => {
+            sel.innerHTML += '<option value="' + c.id + '">' + c.companyName + ' (' + c.customerCode + ')</option>';
+        });
+    }
+}
+
+// =======================================================
+
+
+
+
+// ==================== CARRIERS ====================
+async function loadCarriers() {
+    const res = await apiCall(CTX + '/api/ops/carriers');
+    if(res && res.ok) {
+        const d = await res.json();
+        const tbody = document.getElementById('carriersBody');
+        const assignSel = document.getElementById('assignCarrierSelect');
+        let newHtml = '';
+        let optsHtml = '<option value="">Select Carrier...</option>';
+        d.data.forEach(c => {
+            newHtml += '<tr>' +
+                    '<td class="fw-bold">' + (c.companyId || '-') + '</td>' +
+                    '<td>' + c.companyName + '</td>' +
+                    '<td>' + (c.motherCompanyAddress || '-') + '</td>' +
+                    '<td class="text-end">' +
+                        '<button class="btn btn-sm btn-outline-primary" onclick="editCarrier(' + c.id + ', \'' + c.companyName + '\', \'' + (c.motherCompanyAddress||'') + '\')">Edit</button>' +
+                    '</td>' +
+                '</tr>';
+            optsHtml += '<option value="'+c.id+'">'+c.companyName+'</option>';
+        });
+        if(d.data.length === 0) newHtml = '<tr><td colspan="4" class="text-center text-muted">No carriers registered.</td></tr>';
+        
+        if (tbody && tbody.innerHTML !== newHtml) { tbody.innerHTML = newHtml; }
+        if (assignSel && assignSel.innerHTML !== optsHtml) { assignSel.innerHTML = optsHtml; }
+    }
+}
+
+async function addCarrier() {
+    const id = document.getElementById('editCarrierId').value;
+    const name = document.getElementById('newCarrierName').value;
+    const addr = document.getElementById('newCarrierAddress').value;
+    if(!name) { alert('Carrier name is required.'); return; }
+    
+    let payload = { companyName: name, motherCompanyAddress: addr };
+    
+    if (id) {
+        await apiCall(CTX + '/api/ops/carriers/' + id, 'PUT', payload);
+    } else {
+        await apiCall(CTX + '/api/ops/carriers', 'POST', payload);
+    }
+    
+    cancelEditCarrier();
+    loadCarriers();
+}
+
+function editCarrier(id, name, addr) {
+    document.getElementById('editCarrierId').value = id;
+    document.getElementById('newCarrierName').value = name;
+    document.getElementById('newCarrierAddress').value = addr;
+    document.getElementById('carrierFormTitle').innerText = 'Edit Carrier';
+    document.getElementById('saveCarrierBtn').innerText = 'Update';
+    document.getElementById('cancelEditCarrierBtn').classList.remove('d-none');
+}
+
+function cancelEditCarrier() {
+    document.getElementById('editCarrierId').value = '';
+    document.getElementById('newCarrierName').value = '';
+    document.getElementById('newCarrierAddress').value = '';
+    document.getElementById('carrierFormTitle').innerText = 'Add New Carrier';
+    document.getElementById('saveCarrierBtn').innerText = 'Register';
+    document.getElementById('cancelEditCarrierBtn').classList.add('d-none');
+}
+
+async function assignCarrierPrompt(id) {
+    document.getElementById('assignCarrierOrderId').value = id;
+    if(!carrierModal) carrierModal = new bootstrap.Modal(document.getElementById('assignCarrierModal'));
+    carrierModal.show();
+}
+
+async function submitCarrierAssign() {
+    const orderId = document.getElementById('assignCarrierOrderId').value;
+    const carrierId = document.getElementById('assignCarrierSelect').value;
+    const dim = document.getElementById('assignCarrierDimensions').value;
+    const dt = document.getElementById('assignCarrierDateTime').value;
+    
+    if(!carrierId) { alert('Please select a carrier.'); return; }
+    
+    const payload = {
+        carrierId: carrierId,
+        dimensions: dim,
+        shipmentDateTime: dt
+    };
+    
+    await apiCall(CTX + '/api/ops/orders/' + orderId + '/assign-carrier', 'PUT', payload);
+    carrierModal.hide();
+    loadOrders();
+}
+
 </script>
 <!-- View Order Details Modal -->
 <div class="modal fade" id="opsOrderModal" tabindex="-1">

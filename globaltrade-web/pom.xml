@@ -13,25 +13,15 @@
     <artifactId>globaltrade-web</artifactId>
     <packaging>war</packaging>
     <name>GlobalTrade Logistics – Web Module</name>
-    <description>
-        Web tier: JAX-RS REST API, Jakarta Security 3.0 (HttpAuthenticationMechanism + IdentityStore),
-        JJWT 0.12 JWT issuance/validation, Java record DTOs, and JSP + Bootstrap 5 UI.
-    </description>
 
     <dependencies>
 
-        <!-- ── Jakarta EE 10 Full API (provided by GlassFish 8.0.3) ── -->
         <dependency>
             <groupId>jakarta.platform</groupId>
             <artifactId>jakarta.jakartaee-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!--
-            ── EJB Module ──
-            Scope: PROVIDED so Maven does not bundle the EJB jar into WEB-INF/lib.
-            At runtime the EAR container places both modules in the same classloader scope.
-        -->
         <dependency>
             <groupId>com.globaltrade.logistics</groupId>
             <artifactId>globaltrade-ejb</artifactId>
@@ -39,11 +29,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!--
-            ── JJWT 0.12+ ──
-            API, Impl, and Jackson serializer are bundled in EAR lib/ (declared in ear pom).
-            Scope: PROVIDED here so we do not duplicate them in WEB-INF/lib.
-        -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -60,7 +45,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ── Log4j 2 (bundled in EAR lib) ── -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -72,21 +56,18 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ── BCrypt (bundled in EAR lib) ── -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- ── Hibernate (used only for entity imports in DTOs if needed) ── -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- ── Testing ── -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

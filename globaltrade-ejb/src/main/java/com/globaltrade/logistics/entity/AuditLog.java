@@ -5,27 +5,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * JPA entity representing an immutable audit log entry.
- *
- * <h2>Persistence Strategy</h2>
- * <ul>
- *   <li>Written by {@code AuditServiceBean.recordEvent()} in a
- *       {@code REQUIRES_NEW} transaction so the record survives
- *       even if the calling business transaction rolls back.</li>
- *   <li>Only INSERT operations are permitted — no UPDATE, no DELETE.
- *       The {@code @PreUpdate} callback throws an exception to
- *       enforce this at the application level.</li>
- *   <li>Indexed on {@code callerUsername}, {@code action},
- *       {@code status}, and {@code timestamp} for efficient
- *       regulatory and compliance queries.</li>
- * </ul>
- *
- * <h2>Retention Policy</h2>
- * Rows older than 365 days should be archived, not deleted.
- * Customs and international trade regulations require audit records
- * to be retained for a minimum of 5 years in some jurisdictions.
- */
 @Entity
 @Table(
     name = "audit_logs",

@@ -8,6 +8,11 @@ import java.util.List;
 
 @Stateless
 public class OpsServiceBean {
+
+    public java.util.List<com.globaltrade.logistics.entity.Customer> getAllCustomers() {
+        return em.createQuery("SELECT c FROM Customer c", com.globaltrade.logistics.entity.Customer.class).getResultList();
+    }
+
     @jakarta.inject.Inject
     private NotificationServiceBean notificationService;
     public void executeNative(String sql) {

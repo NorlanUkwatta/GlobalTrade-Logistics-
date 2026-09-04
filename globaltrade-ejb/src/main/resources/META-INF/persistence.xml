@@ -19,6 +19,8 @@
         <class>com.globaltrade.logistics.entity.Country</class>
         <class>com.globaltrade.logistics.entity.Region</class>
         <class>com.globaltrade.logistics.entity.Warehouse</class>
+                <class>com.globaltrade.logistics.entity.CustomerBill</class>
+        <class>com.globaltrade.logistics.entity.PlatformSubscription</class>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
             <property name="hibernate.transaction.jta.platform" value="org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform"/>

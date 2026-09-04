@@ -209,19 +209,22 @@
                     </div>
                     <a href="${pageContext.request.contextPath}/api/customers/reports/history" class="btn btn-outline-secondary"><i class="bi bi-download me-2"></i>Export Ledger</a>
                 </div>
+
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>Invoice ID</th>
-                            <th>Order Ref</th>
-                            <th>Payee (Vendor)</th>
-                            <th>Amount</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Amount (USD)</th>
                             <th>Status</th>
                             <th>Date Issued</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="paymentsTableBody"></tbody>
                 </table>
+
             </div>
         </div>
 
@@ -446,6 +449,10 @@ async function loadPortal() {
     }
 }
 
+
+let cachedCustomerId = null;
+let cachedCustomerEmail = "customer@globaltrade.com";
+let cachedCustomerName = "Customer";
 async function loadProfile() {
     const res = await apiCall(CTX + '/api/customers/profile');
     if (res && res.ok) {
@@ -455,8 +462,58 @@ async function loadProfile() {
         document.getElementById('profEmail').value = d.data.email || '';
         document.getElementById('profCompany').value = d.data.companyName || '';
         document.getElementById('ordName').value = d.data.fullName || ''; 
+        cachedCustomerId = d.data.customerId;
+        cachedCustomerEmail = d.data.email || cachedCustomerEmail;
+        cachedCustomerName = d.data.fullName || d.data.companyName || cachedCustomerName;
     }
 }
+
+
+// PAYHERE INTEGRATION
+async function payWithPayhere(billId, amount, desc) {
+    // Fetch secure hash and merchant ID from backend
+    const hashRes = await apiCall(CTX + '/api/billing/payhere-hash/' + billId);
+    if (!hashRes || !hashRes.ok) {
+        alert("Failed to initialize payment. Please try again later.");
+        return;
+    }
+    const hashData = await hashRes.json();
+    const config = hashData.data;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'https://sandbox.payhere.lk/pay/checkout';
+    
+    const params = {
+        merchant_id: config.merchant_id,
+        return_url: window.location.origin + CTX + '/customer-portal.jsp',
+        cancel_url: window.location.origin + CTX + '/customer-portal.jsp',
+        notify_url: window.location.origin + CTX + '/api/billing/payhere-notify',
+        order_id: config.order_id,
+        items: desc,
+        currency: config.currency,
+        amount: config.amount,
+        hash: config.hash,
+        first_name: cachedCustomerName,
+        last_name: '',
+        email: cachedCustomerEmail,
+        phone: '0771234567',
+        address: 'GlobalTrade Customer',
+        city: 'Colombo',
+        country: 'Sri Lanka'
+    };
+
+    for (const key in params) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = params[key];
+        form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    form.submit();
+}
+
 
 async function saveProfile() {
     const payload = {
@@ -536,8 +593,6 @@ function getStepperHtml(status) {
         <div class="track-stepper">
             <div class="track-progress-bar" style="width: 0%;" onload="this.style.width='\${w}%';"></div>
     `;
-    // We'll set the width animation using a small timeout below
-    
     const steps = [
         { label: "Processing", icon: "bi-box-seam" },
         { label: "In Transit", icon: "bi-airplane" },
@@ -628,24 +683,32 @@ async function loadShipments() {
     }
 }
 
+
 async function loadPayments() {
-    const res = await apiCall(CTX + '/api/customers/payments');
+    if (!cachedCustomerId) return; // Wait until profile is loaded
+    
+    const res = await apiCall(CTX + '/api/billing/bills/' + cachedCustomerId);
     if(res && res.ok) {
         const d = await res.json();
         const tbody = document.getElementById('paymentsTableBody');
         tbody.innerHTML = '';
+        if (d.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No pending invoices.</td></tr>';
+            return;
+        }
         d.data.forEach(p => {
-            let stat = p.isPaid ? '<span class="badge bg-success">Settled</span>' : '<span class="badge bg-warning text-dark">Outstanding</span>';
-            tbody.innerHTML += `
-                <tr>
-                    <td class="fw-bold">INV-\${p.id}</td>
-                    <td>\${p.shippingOrder ? p.shippingOrder.orderId : '-'}</td>
-                    <td>\${p.vendor ? p.vendor.companyName : '-'}</td>
-                    <td class="fw-bold">Rs. \${p.amount ? p.amount.toFixed(2) : '0.00'}</td>
-                    <td>\${stat}</td>
-                    <td>\${p.createdAt ? new Date(p.createdAt.replace('[UTC]', '')).toLocaleDateString() : '-'}</td>
-                </tr>
-            `;
+            let stat = p.status === 'PAID' ? '<span class="badge bg-success">Paid</span>' : '<span class="badge bg-warning text-dark">Pending</span>';
+            let actionBtn = p.status === 'PAID' ? '-' : '<button class="btn btn-sm btn-primary" onclick="payWithPayhere(' + p.id + ', ' + p.amount + ', \'' + (p.description || '').replace(/'/g, "\'") + '\')">Pay Now</button>';
+            
+            tbody.innerHTML += '<tr>' +
+                '<td class="fw-bold">INV-' + p.id + '</td>' +
+                '<td>' + (p.description || '') + '</td>' +
+                '<td><span class="badge bg-secondary">' + (p.billType || 'SUBSCRIPTION') + '</span></td>' +
+                '<td class="fw-bold">$' + (p.amount ? p.amount.toFixed(2) : '0.00') + '</td>' +
+                '<td>' + stat + '</td>' +
+                '<td>' + (p.createdAt ? new Date(p.createdAt.replace('[UTC]', '')).toLocaleDateString() : '-') + '</td>' +
+                '<td>' + actionBtn + '</td>' +
+                '</tr>';
         });
     }
 }

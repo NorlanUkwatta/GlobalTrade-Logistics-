@@ -32,6 +32,20 @@ public class Customer implements Serializable {
         createdAt = LocalDateTime.now();
     }
 
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "subscription_id")
+    private PlatformSubscription subscription;
+
+    @Column(name = "next_billing_date")
+    private LocalDateTime nextBillingDate;
+
+    public PlatformSubscription getSubscription() { return subscription; }
+    public void setSubscription(PlatformSubscription subscription) { this.subscription = subscription; }
+
+    public LocalDateTime getNextBillingDate() { return nextBillingDate; }
+    public void setNextBillingDate(LocalDateTime nextBillingDate) { this.nextBillingDate = nextBillingDate; }
+
     public Customer() {}
 
     public Long getId() { return id; }

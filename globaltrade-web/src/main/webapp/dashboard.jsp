@@ -116,7 +116,7 @@
     </ul>
 </nav>
 
-<!-- Ã¢â€â‚¬Ã¢â€â‚¬ MAIN CONTENT Ã¢â€â‚¬Ã¢â€â‚¬ -->
+<!--  MAIN CONTENT  -->
 <main class="main-content">
 
     <!-- Top Bar -->
@@ -244,7 +244,7 @@
 const CTX = '${pageContext.request.contextPath}';
 let currentUser = null;
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Utility Ã¢â€â‚¬Ã¢â€â‚¬
+// Utility
 
 async function apiCall(url, method='GET', body=null) {
     const opts = { method, headers: { 'Content-Type': 'application/json' } };
@@ -259,7 +259,7 @@ async function doLogout() {
     window.location.href=CTX+'/login.jsp';
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Load User Profile Ã¢â€â‚¬Ã¢â€â‚¬
+// Load User Profile
 async function loadUserProfile() {
     const res = await apiCall(CTX + '/api/auth/me');
     if (!res) return;
@@ -298,7 +298,7 @@ function applyRoleVisibility(role) {
     });
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Simulate KPI Loading (Phase 1 placeholder Ã¢â‚¬â€ real data in Phase 2) Ã¢â€â‚¬Ã¢â€â‚¬
+// Simulate KPI Loading (Phase 1 placeholder  real data in Phase 2)
 function loadKpiPlaceholders() {
     setTimeout(() => {
         document.getElementById('kpi-shipments').textContent = '--';
@@ -308,7 +308,7 @@ function loadKpiPlaceholders() {
     }, 300);
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Init Ã¢â€â‚¬Ã¢â€â‚¬
+// Init
 document.addEventListener('DOMContentLoaded', () => {
     loadUserProfile();
     loadKpiPlaceholders();

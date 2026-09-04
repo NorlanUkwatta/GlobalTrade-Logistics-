@@ -93,9 +93,16 @@
             </form>
 
             <div class="text-center mt-4">
-                <p class="mb-2">Don't have an account? 
-                    <a href="vendor-signup.jsp" class="text-success fw-bold text-decoration-none">Vendor Signup</a>
-                </p>
+                <p class="text-muted mb-2 small fw-semibold text-uppercase" style="letter-spacing:0.05em;">New to GlobalTrade?</p>
+                <div class="d-grid gap-2">
+                    <a href="signup.jsp" class="btn btn-outline-success">
+                        <i class="bi bi-person-plus-fill me-2"></i>Create a Customer Account
+                    </a>
+                    <a href="vendor-signup.jsp" class="btn btn-outline-secondary">
+                        <i class="bi bi-building me-2"></i>Register as a Vendor / Supplier
+                    </a>
+                </div>
+                <hr class="my-3">
                 <small class="text-muted">
                     <i class="bi bi-shield-lock-fill me-1"></i>
                     Secured with JWT + BCrypt. All activity is audited.

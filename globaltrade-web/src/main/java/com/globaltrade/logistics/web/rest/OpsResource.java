@@ -28,6 +28,13 @@ import java.util.Map;
 @Consumes(MediaType.APPLICATION_JSON)
 @PermitAll
 public class OpsResource {
+
+    @GET
+    @Path("/customers")
+    public Response getAllCustomers() {
+        return Response.ok(ApiResponse.success("Customers", opsService.getAllCustomers())).build();
+    }
+
     @Context
     private SecurityContext securityContext;
 

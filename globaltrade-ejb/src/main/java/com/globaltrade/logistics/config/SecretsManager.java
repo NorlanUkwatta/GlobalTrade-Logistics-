@@ -9,16 +9,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-/**
- * Application-scoped configuration manager for externalized secrets.
- *
- * <h2>Usage</h2>
- * Reads a standard Java .properties file from a location defined by the
- * JVM argument: -Dglobaltrade.secrets.file
- *
- * This keeps sensitive data (JWT keys, carrier API tokens, database credentials)
- * entirely out of the application's source code and deployment archive.
- */
 @ApplicationScoped
 public class SecretsManager {
 
@@ -44,18 +34,10 @@ public class SecretsManager {
         }
     }
 
-    /**
-     * Retrieves a secret by its key.
-     * @param key the property key (e.g. "jwt.secret.key")
-     * @return the secret value, or null if not found
-     */
     public String getSecret(String key) {
         return properties.getProperty(key);
     }
 
-    /**
-     * Retrieves a secret by its key, providing a fallback default value.
-     */
     public String getSecret(String key, String defaultValue) {
         return properties.getProperty(key, defaultValue);
     }

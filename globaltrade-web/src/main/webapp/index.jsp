@@ -1,10 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%--
-    index.jsp - Platform Entry Point
-    Redirects authenticated users to the dashboard.
-    Unauthenticated users are redirected to login by the JwtSessionFilter,
-    but we add a client-side JS check as well for faster response.
---%>
 <!DOCTYPE html>
 <html lang="en">
 <head>

@@ -13,15 +13,9 @@
     <artifactId>globaltrade-ear</artifactId>
     <packaging>ear</packaging>
     <name>GlobalTrade Logistics – EAR Assembly</name>
-    <description>
-        Enterprise Archive: assembles the EJB jar + WAR + all shared library JARs into
-        a single deployable .ear for GlassFish 8.0.3. Shared libraries go to EAR/lib/
-        so both the EJB and WAR classloaders see them through EAR parent delegation.
-    </description>
 
     <dependencies>
 
-        <!-- ── Application Modules ── -->
         <dependency>
             <groupId>com.globaltrade.logistics</groupId>
             <artifactId>globaltrade-ejb</artifactId>
@@ -33,22 +27,12 @@
             <type>war</type>
         </dependency>
 
-        <!--
-            ══════════════════════════════════════════════════════════════
-             SHARED LIBRARY JARs — compile scope → bundled in EAR/lib/
-             Available to both globaltrade-ejb.jar and globaltrade-web.war
-             via EAR parent classloader delegation.
-            ══════════════════════════════════════════════════════════════
-        -->
 
-        <!-- Hibernate ORM 6 (JPA provider — GlassFish uses EclipseLink by default,
-             we override with Hibernate declared in persistence.xml) -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
         </dependency>
 
-        <!-- JJWT 0.12 — API + runtime implementations -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -62,7 +46,6 @@
             <artifactId>jjwt-jackson</artifactId>
         </dependency>
 
-        <!-- Log4j 2 — structured enterprise logging -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -72,18 +55,12 @@
             <artifactId>log4j-core</artifactId>
         </dependency>
 
-        <!-- BCrypt — secure password hashing -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
         </dependency>
 
-        <!--
-            NOTE: MySQL connector-j is NOT included here.
-            It must be placed in: <GLASSFISH_HOME>/domains/domain1/lib/
-            This is required for GlassFish's JTA connection pool to find
-            the JDBC driver outside the application classloader.
-        -->
+
 
     </dependencies>
 
@@ -93,9 +70,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-ear-plugin</artifactId>
                 <configuration>
-                    <!-- Jakarta EE 10 application version -->
                     <version>8</version>
-                    <!-- All non-module compile JARs land here -->
                     <defaultLibBundleDir>lib</defaultLibBundleDir>
                     <modules>
                         <ejbModule>
@@ -110,7 +85,6 @@
                             <contextRoot>/globaltrade</contextRoot>
                         </webModule>
                     </modules>
-                    <!-- application.xml is auto-generated from above config -->
                     <generateApplicationXml>true</generateApplicationXml>
                 </configuration>
             </plugin>

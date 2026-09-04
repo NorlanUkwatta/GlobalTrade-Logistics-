@@ -206,6 +206,7 @@ public class CustomerResource {
             Customer c = portalService.getCustomer(u.getCustomerId());
             if (c != null) {
                 data.put("companyName", c.getCompanyName());
+                data.put("customerId", u.getCustomerId().toString());
             }
         }
         return Response.ok(ApiResponse.success(data)).build();
