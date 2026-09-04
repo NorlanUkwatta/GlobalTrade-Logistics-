@@ -9,6 +9,9 @@ import java.util.List;
 @Stateless
 public class CustomerPortalServiceBean {
 
+    @jakarta.inject.Inject
+    private NotificationServiceBean notificationService;
+
     @PersistenceContext(unitName = "GlobalTradeLogisticsPU")
     private EntityManager em;
 
@@ -89,6 +92,21 @@ public class CustomerPortalServiceBean {
         
         return returnData;
     }
+
+    public ShippingOrder markOrderReceived(Long orderId, Long customerId) {
+        ShippingOrder order = em.find(ShippingOrder.class, orderId);
+        if (order == null) throw new IllegalArgumentException("Order not found");
+        order.setStatus(ShippingOrder.Status.DELIVERED);
+        em.merge(order);
+        // Notify Ops team
+        notificationService.sendEmail(
+            "ops@globaltradelogistics.com",
+            "Order Delivered - " + order.getOrderId(),
+            "Customer has confirmed receipt of Order #" + order.getOrderId() + ". Status updated to DELIVERED."
+        );
+        return order;
+    }
+
     public void updateProfile(Long userId, Long customerId, String fullName, String email, String companyName) {
         User user = em.find(User.class, userId);
         if (user != null) {

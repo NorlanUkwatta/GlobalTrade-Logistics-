@@ -144,7 +144,7 @@ const CTX = '';
 let currentUser = null;
 
 async function apiCall(url, method='GET', body=null) {
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    const opts = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' };
     if(body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
     if(res.status === 401) { window.location.href = CTX + '/login.jsp'; return null; }

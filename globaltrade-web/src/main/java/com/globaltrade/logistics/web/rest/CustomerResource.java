@@ -58,6 +58,14 @@ public class CustomerResource {
         return Response.ok(ApiResponse.success("Order Cancelled", null)).build();
     }
 
+    @PUT
+    @Path("/orders/{id}/received")
+    @RolesAllowed("CUSTOMER")
+    public Response markOrderReceived(@PathParam("id") Long id) {
+        ShippingOrder order = portalService.markOrderReceived(id, getCustomerUser().getCustomerId());
+        return Response.ok(ApiResponse.success("Order marked as Received. Ops team notified.", order)).build();
+    }
+
     @DELETE
     @Path("/orders/{id}")
     @RolesAllowed("CUSTOMER")

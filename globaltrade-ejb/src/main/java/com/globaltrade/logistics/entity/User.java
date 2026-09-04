@@ -94,6 +94,7 @@ public class User implements Serializable {
      * BCrypt hash (12 rounds). Never exposed outside this entity or the IdentityStore.
      */
     @Column(name = "password_hash", nullable = false, length = 255)
+    @jakarta.json.bind.annotation.JsonbTransient
     private String passwordHash;
 
     // ── Role & Isolation ──

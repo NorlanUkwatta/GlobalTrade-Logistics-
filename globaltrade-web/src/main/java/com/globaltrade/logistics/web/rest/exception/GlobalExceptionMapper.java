@@ -7,6 +7,7 @@ import jakarta.ejb.EJBAccessException;
 import jakarta.ejb.EJBException;
 import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -115,6 +116,26 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
             return Response.status(Response.Status.METHOD_NOT_ALLOWED)
                 .type(MediaType.APPLICATION_JSON)
                 .entity(ApiResponse.error("HTTP method not allowed for this endpoint."))
+                .build();
+        }
+
+        
+        // Handle JAX-RS standard exceptions (e.g., NotAuthorizedException, ForbiddenException, NotFoundException)
+        if (exception instanceof WebApplicationException webAppEx) {
+            LOG.warn("[JAX-RS] Framework exception: {}", webAppEx.getMessage());
+            return Response.status(webAppEx.getResponse().getStatus())
+                .type(MediaType.APPLICATION_JSON)
+                .entity(ApiResponse.error(webAppEx.getMessage()))
+                .build();
+        }
+
+        
+        // Handle JAX-RS standard exceptions (e.g., NotAuthorizedException, ForbiddenException, NotFoundException)
+        if (exception instanceof WebApplicationException webAppEx) {
+            LOG.warn("[JAX-RS] Framework exception: {}", webAppEx.getMessage());
+            return Response.status(webAppEx.getResponse().getStatus())
+                .type(MediaType.APPLICATION_JSON)
+                .entity(ApiResponse.error(webAppEx.getMessage()))
                 .build();
         }
 

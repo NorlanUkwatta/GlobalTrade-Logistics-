@@ -328,26 +328,7 @@
     </div>
 </div>
 
-<!-- View Shipping Order Details Modal -->
-<div class="modal fade" id="viewShippingOrderModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Order Details <span id="voId" class="badge bg-primary ms-2"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>Customer:</strong> <span id="voCustomer"></span></p>
-                <p><strong>Mobile:</strong> <span id="voMobile"></span></p>
-                <p><strong>Delivery Address:</strong><br><span id="voAddress"></span></p>
-                <p><strong>Description:</strong> <span id="voDesc"></span></p>
-                <p><strong>Weight:</strong> <span id="voWeight"></span> kg</p>
-                <p><strong>Route:</strong> <span id="voRoute"></span></p>
-                <p><strong>Status:</strong> <span id="voStatus"></span></p>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- (Keeping Existing Modals for ASN, Propose Date, Compliance) -->
 <!-- ASN Modal -->
@@ -436,13 +417,13 @@
 <script>
 const CTX = '${pageContext.request.contextPath}';
 let asnModalInstance, proposeDateModalInstance, complianceModalInstance;
-let createShippingOrderModalInstance, viewShippingOrderModalInstance;
+let createShippingOrderModalInstance, viewShippingOrderModalInstance, orderDetailsModalInstance;
 let firstVendorLoad = true;
 let knownVendorOrderIds = new Set();
 let vendorPollingInterval = null;
 
 async function apiCall(url, method='GET', bodyData=null) {
-    let options = { method, headers: { 'Content-Type': 'application/json' } };
+    let options = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' };
     if(bodyData) options.body = JSON.stringify(bodyData);
     const res = await fetch(url, options);
     if(res.status === 401) { window.location.href = CTX + '/login.jsp'; return null; }
@@ -581,7 +562,7 @@ function renderInProcessingTable() {
     const tbody = document.getElementById("inProcessingTbody");
     if(!tbody) return;
     tbody.innerHTML = "";
-    const inProc = currentShippingOrders.filter(o => o.vendorDecision === "ACCEPTED" && (o.status === "IN_PROGRESS" || o.status === "READY_FOR_DELIVERY" || o.status === "ORDER_COMPLETED"));
+    const inProc = currentShippingOrders.filter(o => o.vendorDecision === "ACCEPTED" && (o.status === "IN_PROGRESS" || o.status === "READY_FOR_DELIVERY" || o.status === "ORDER_COMPLETED" || o.status === "IN_WAREHOUSE"));
     if (inProc.length === 0) {
         tbody.innerHTML = "<tr><td colspan=\"5\" class=\"text-center text-muted py-4\">No orders in processing</td></tr>";
         return;
@@ -596,14 +577,20 @@ function renderInProcessingTable() {
             statusBadge = "<span class=\"badge bg-primary\">IN PRODUCTION</span>";
             actionBtn = "<button class=\"btn btn-sm btn-success fw-bold\" onclick=\"markReadyForDelivery(" + o.id + ")\">Ready for Delivery</button>";
         } else if (o.status === "READY_FOR_DELIVERY") {
-            statusBadge = "<span class=\"badge bg-warning text-dark\">AWAITING CARRIER</span>";
-            if (o.assignedCarrier) {
-                statusBadge = "<span class=\"badge bg-info text-dark\">CARRIER ASSIGNED: " + o.assignedCarrier + "</span>";
-                actionBtn = "<button class=\"btn btn-sm btn-primary fw-bold\" onclick=\"handoverOrder(" + o.id + ")\">Handover to Warehouse</button>";
+            statusBadge = "<span class=\"badge bg-warning text-dark\">AWAITING WAREHOUSE ASSIGNMENT</span>";
+            if (o.assignedWarehouse) {
+                statusBadge = `<span class="badge bg-info text-dark">WAREHOUSE ASSIGNED</span>`;
+                actionBtn = '<button class="btn btn-sm btn-primary fw-bold me-1" onclick="handoverOrder(' + o.id + ')">Handover to WH</button>';
             } else {
-                actionBtn = "<button class=\"btn btn-sm btn-secondary fw-bold\" disabled>Waiting for Ops</button>";
+                actionBtn = `<button class="btn btn-sm btn-secondary fw-bold me-1" disabled>Waiting for Ops</button>`;
             }
+        } else if (o.status === "IN_WAREHOUSE") {
+            statusBadge = "<span class=\"badge bg-info text-dark\">IN WAREHOUSE</span>";
+            actionBtn = "<span class=\"text-success me-1\"><i class=\"bi bi-check-circle-fill\"></i> Handed Over</span>";
         }
+        
+        actionBtn += "<button class=\"btn btn-sm btn-outline-primary fw-bold ms-1\" onclick=\"viewOrderDetails('" + o.orderId + "')\">View Details</button>";
+
         
         let html = "<td><strong>" + o.orderId + "</strong></td>" +
                    "<td>" + o.customerFullName + "</td>" +
@@ -666,21 +653,7 @@ function renderOrderHistoryTable() {
     });
 }
 
-function viewShippingOrder(orderId) {
-    const o = currentShippingOrders.find(x => x.orderId === orderId);
-    if(!o) return;
-    document.getElementById('voId').innerText = o.orderId;
-    document.getElementById('voCustomer').innerText = o.customerFullName;
-    document.getElementById('voMobile').innerText = o.mobile || 'N/A';
-    document.getElementById('voAddress').innerHTML = `\${o.addressLine1}<br>\${o.addressLine2 ? o.addressLine2+'<br>' : ''}\${o.city}, \${o.state} \${o.postalCode}<br>\${o.country}`;
-    document.getElementById('voDesc').innerText = o.orderDescription || 'N/A';
-    document.getElementById('voWeight').innerText = o.weight || '0';
-    document.getElementById('voRoute').innerText = (o.routeFrom && o.routeTo) ? (o.routeFrom + ' -> ' + o.routeTo) : 'TBD';
-    document.getElementById('voStatus').innerText = o.status;
-    
-    if(!viewShippingOrderModalInstance) viewShippingOrderModalInstance = new bootstrap.Modal(document.getElementById('viewShippingOrderModal'));
-    viewShippingOrderModalInstance.show();
-}
+
 
 function renderReturns(returns) {
     const tbody = document.getElementById('returnsTableBody');
@@ -744,7 +717,19 @@ function viewOrderDetails(orderId) {
     document.getElementById('voOpsName').innerText = o.opsAssigneeName || 'Ops Team';
     document.getElementById('voStatus').innerText = o.status || 'N/A';
     
-    new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+    if (o.assignedWarehouse) {
+        document.getElementById('voWarehouseSection').classList.remove('d-none');
+        document.getElementById('voWarehouseName').innerText = o.assignedWarehouse.name;
+        document.getElementById('voWarehouseAddress').innerText = o.assignedWarehouse.addressLine1 + (o.assignedWarehouse.addressLine2 ? ', ' + o.assignedWarehouse.addressLine2 : '');
+        document.getElementById('voWarehouseCityState').innerText = o.assignedWarehouse.city + ', ' + o.assignedWarehouse.state + ' ' + o.assignedWarehouse.postalCode;
+    } else {
+        document.getElementById('voWarehouseSection').classList.add('d-none');
+    }
+    
+    if (!orderDetailsModalInstance) {
+          orderDetailsModalInstance = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+      }
+      orderDetailsModalInstance.show();
 }
 
 async function submitDecision(orderId, decision, reason = null, proposedDate = null) {
@@ -808,7 +793,7 @@ document.addEventListener('DOMContentLoaded', loadPortal);
 <!-- View Order Details Modal -->
 <div class="modal fade" id="orderDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content border-0 shadow">
+        <div class="modal-content border-0 shadow" style="background-color: var(--gt-card-bg); color: #334155;">
             <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title fw-bold">Order Details - <span id="voId"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -832,6 +817,16 @@ document.addEventListener('DOMContentLoaded', loadPortal);
                 <div class="row mb-3">
                     <div class="col-md-6"><small class="text-muted">Assigned By (Ops)</small><br><span id="voOpsName"></span></div>
                     <div class="col-md-6"><small class="text-muted">Status</small><br><span class="badge bg-primary" id="voStatus"></span></div>
+                </div>
+                <div class="row mb-3 d-none" id="voWarehouseSection">
+                    <div class="col-md-12">
+                        <small class="text-muted">Assigned Warehouse</small><br>
+                        <div class="mt-2 small text-start bg-light p-3 rounded border" style="color: #334155;">
+                            <i class="bi bi-building text-primary"></i> <strong id="voWarehouseName" class="fs-6"></strong><br>
+                            <span id="voWarehouseAddress"></span><br>
+                            <span id="voWarehouseCityState"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

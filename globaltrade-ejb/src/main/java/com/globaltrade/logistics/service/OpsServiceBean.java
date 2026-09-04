@@ -36,7 +36,8 @@ public class OpsServiceBean {
     public ShippingOrder assignWarehouseToShippingOrder(Long orderId, String warehouseName) {
         ShippingOrder order = em.find(ShippingOrder.class, orderId);
         if (order != null) {
-            order.setAssignedWarehouse(warehouseName);
+            Warehouse w = em.createQuery("SELECT w FROM Warehouse w WHERE w.name = :n", Warehouse.class).setParameter("n", warehouseName).getSingleResult();
+            order.setAssignedWarehouse(w);
             em.merge(order);
             if (order.getVendor() != null) {
                 notificationService.sendEmail(order.getVendor().getEmail(), "Warehouse Assigned", "Warehouse " + warehouseName + " has been assigned for your order " + order.getOrderId() + ". Please handover the order to the warehouse.");
@@ -45,16 +46,39 @@ public class OpsServiceBean {
         return order;
     }
 
-    public ShippingOrder assignCarrierToShippingOrder(Long orderId, String carrierName) {
+        public ShippingOrder assignCarrierToShippingOrder(Long orderId, Long carrierId, String dimensions, String shipmentDateTime) {
         ShippingOrder order = em.find(ShippingOrder.class, orderId);
         if (order != null) {
-            order.setAssignedCarrier(carrierName);
+            Carrier c = em.find(Carrier.class, carrierId);
+            order.setAssignedCarrier(c);
+            order.setOrderDimensions(dimensions);
+            order.setShipmentDateTime(shipmentDateTime);
             em.merge(order);
-            if (order.getVendor() != null) {
-                notificationService.sendEmail(order.getVendor().getEmail(), "Carrier Assigned", "Carrier/Transporter " + carrierName + " has been assigned for your order " + order.getOrderId() + ".");
+            if (order.getVendor() != null && c != null) {
+                notificationService.sendEmail(order.getVendor().getEmail(), "Carrier Assigned", "Carrier/Transporter " + c.getCompanyName() + " has been assigned for your order " + order.getOrderId() + ".");
             }
         }
         return order;
+    }
+
+        public Carrier createCarrier(Carrier c) {
+        c.setCompanyId("CAR-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        em.persist(c);
+        return c;
+    }
+
+    public Carrier updateCarrier(Long id, Carrier c) {
+        Carrier existing = em.find(Carrier.class, id);
+        if (existing != null) {
+            existing.setCompanyName(c.getCompanyName());
+            existing.setMotherCompanyAddress(c.getMotherCompanyAddress());
+            em.merge(existing);
+        }
+        return existing;
+    }
+
+    public List<Carrier> getAllCarriers() {
+        return em.createQuery("SELECT c FROM Carrier c", Carrier.class).getResultList();
     }
 
     public ShippingOrder verifyWarehouseReceipt(Long orderId) {
@@ -144,13 +168,73 @@ public class OpsServiceBean {
             em.remove(cat);
         }
     }
+
+    public ShippingOrder acceptOrderFromVendor(Long orderId, Double weight, String returnType, String returnReason, Integer returnQty) {
+        ShippingOrder order = em.find(ShippingOrder.class, orderId);
+        if (order != null) {
+            order.setStatus(ShippingOrder.Status.IN_WAREHOUSE);
+            order.setWeight(weight);
+            order.setReturnType(returnType);
+            order.setReturnReason(returnReason);
+            order.setReturnQuantity(returnQty);
+            em.merge(order);
+            notificationService.sendEmail("ops@globaltrade.com", "Order Arrived at Warehouse", "Order " + order.getOrderId() + " is IN_WAREHOUSE. Please assign a carrier.");
+        }
+        return order;
+    }
+
+    public List<Country> getAllCountries() {
+        return em.createQuery("SELECT c FROM Country c ORDER BY c.name", Country.class).getResultList();
+    }
+
+    public Country createCountry(String name, String code) {
+        Country c = new Country(name, code);
+        em.persist(c);
+        return c;
+    }
+
+    public List<Region> getAllRegions() {
+        return em.createQuery("SELECT r FROM Region r ORDER BY r.name", Region.class).getResultList();
+    }
+
+    public Region createRegion(String name) {
+        Region r = new Region();
+        r.setName(name);
+        em.persist(r);
+        return r;
+    }
+
+    public List<User> getWarehouseManagers() {
+        return em.createQuery("SELECT u FROM User u WHERE u.role = :role AND u.active = true", User.class)
+                .setParameter("role", UserRole.WAREHOUSE_MGR)
+                .getResultList();
+    }
+
+    public List<Warehouse> getAllWarehouses() {
+        return em.createQuery("SELECT w FROM Warehouse w LEFT JOIN FETCH w.country LEFT JOIN FETCH w.region LEFT JOIN FETCH w.manager", Warehouse.class).getResultList();
+    }
+
+    public Warehouse createWarehouse(String name, String addressLine1, String addressLine2, String city, String state, String postalCode, Long countryId, Long regionId, Long managerId, boolean active) {
+        Warehouse w = new Warehouse();
+        w.setName(name);
+        w.setAddressLine1(addressLine1);
+        w.setAddressLine2(addressLine2);
+        w.setCity(city);
+        w.setState(state);
+        w.setPostalCode(postalCode);
+        
+        if (countryId != null && countryId > 0) {
+            w.setCountry(em.find(Country.class, countryId));
+        }
+        if (regionId != null && regionId > 0) {
+            w.setRegion(em.find(Region.class, regionId));
+        }
+        if (managerId != null && managerId > 0) {
+            w.setManager(em.find(User.class, managerId));
+        }
+        w.setActive(active);
+        
+        em.persist(w);
+        return w;
+    }
 }
-
-
-
-
-
-
-
-
-

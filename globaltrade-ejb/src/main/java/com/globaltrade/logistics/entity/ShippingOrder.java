@@ -191,18 +191,51 @@ public class ShippingOrder implements Serializable {
     public String getQualityStandardsDocUrl() { return qualityStandardsDocUrl; }
     public void setQualityStandardsDocUrl(String qualityStandardsDocUrl) { this.qualityStandardsDocUrl = qualityStandardsDocUrl; }
 
-    @Column(name = "assigned_warehouse", length = 150)
-    private String assignedWarehouse;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "assigned_warehouse_id")
+    private Warehouse assignedWarehouse;
 
-    @Column(name = "assigned_carrier", length = 150)
-    private String assignedCarrier;
+    @ManyToOne
+    @JoinColumn(name = "assigned_carrier_id")
+    private Carrier assignedCarrier;
 
-    public String getAssignedWarehouse() { return assignedWarehouse; }
-    public void setAssignedWarehouse(String assignedWarehouse) { this.assignedWarehouse = assignedWarehouse; }
+    @Column(name = "order_dimensions", length = 255)
+    private String orderDimensions;
 
-    public String getAssignedCarrier() { return assignedCarrier; }
-    public void setAssignedCarrier(String assignedCarrier) { this.assignedCarrier = assignedCarrier; }
+    public String getOrderDimensions() { return orderDimensions; }
+    public void setOrderDimensions(String orderDimensions) { this.orderDimensions = orderDimensions; }
+
+    @Column(name = "shipment_date_time", length = 100)
+    private String shipmentDateTime;
+
+    public String getShipmentDateTime() { return shipmentDateTime; }
+    public void setShipmentDateTime(String shipmentDateTime) { this.shipmentDateTime = shipmentDateTime; }
+
+    public Warehouse getAssignedWarehouse() { return assignedWarehouse; }
+    public void setAssignedWarehouse(Warehouse assignedWarehouse) { this.assignedWarehouse = assignedWarehouse; }
+
+    public Carrier getAssignedCarrier() { return assignedCarrier; }
+
+    @Column(name = "return_type", length = 20)
+    private String returnType; // "FULL", "PARTIAL"
+
+    @Column(name = "return_reason", length = 255)
+    private String returnReason;
+
+    @Column(name = "return_quantity")
+    private Integer returnQuantity;
+
+    public String getReturnType() { return returnType; }
+    public void setReturnType(String returnType) { this.returnType = returnType; }
+
+    public String getReturnReason() { return returnReason; }
+    public void setReturnReason(String returnReason) { this.returnReason = returnReason; }
+
+    public Integer getReturnQuantity() { return returnQuantity; }
+    public void setReturnQuantity(Integer returnQuantity) { this.returnQuantity = returnQuantity; }
+    public void setAssignedCarrier(Carrier assignedCarrier) { this.assignedCarrier = assignedCarrier; }
 }
+
 
 
 

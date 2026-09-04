@@ -40,7 +40,16 @@ public class AdminBootstrapBean {
             
             em.createNativeQuery("UPDATE shipments SET status = 'SHIPPED' WHERE status = 'IN_TRANSIT'").executeUpdate();
             em.createNativeQuery("UPDATE shipments SET status = 'IN_PROGRESS' WHERE status = 'CUSTOMS_CLEARANCE'").executeUpdate();
+            
             em.createNativeQuery("UPDATE shipments SET status = 'IN_WAREHOUSE' WHERE status = 'WAREHOUSE'").executeUpdate();
+            
+            try {
+                em.createNativeQuery("ALTER TABLE regions MODIFY country_id BIGINT NULL").executeUpdate();
+                LOG.info("Successfully made regions.country_id NULLable.");
+            } catch(Exception ex) {
+                LOG.warn("Could not alter regions table: " + ex.getMessage());
+            }
+
         } catch(Exception e) {
             LOG.warn("Migration failed (possibly already applied or tables missing): " + e.getMessage());
         }
@@ -62,10 +71,36 @@ public class AdminBootstrapBean {
                     LOG.info("Injecting missing itops1 user...");
                     createUser("itops1", "IT Operations", "itops@globaltrade.lk", UserRole.ITOPS, null, null);
                 }
+                
+                Long countryCount = em.createQuery("SELECT COUNT(c) FROM Country c", Long.class).getSingleResult();
+                if (countryCount == 0) {
+                    bootstrapLocations();
+                }
             }
         } catch (Exception e) {
             LOG.fatal("BOOTSTRAP FAILURE: {}", e.getMessage(), e);
         }
+    }
+
+    private void bootstrapLocations() {
+        LOG.info("Injecting location data...");
+        Country lk = new Country("Sri Lanka", "LK");
+        Country us = new Country("United States", "US");
+        Country uk = new Country("United Kingdom", "UK");
+        em.persist(lk);
+        em.persist(us);
+        em.persist(uk);
+        
+        em.persist(new Region("Western Province"));
+        em.persist(new Region("Southern Province"));
+        em.persist(new Region("Central Province"));
+        
+        em.persist(new Region("California"));
+        em.persist(new Region("New York"));
+        em.persist(new Region("Texas"));
+        
+        em.persist(new Region("England"));
+        em.persist(new Region("Scotland"));
     }
 
     private void bootstrapAllData() {
@@ -168,6 +203,8 @@ public class AdminBootstrapBean {
         i2.setLocation("WH-KATUNAYAKE-B2");
         em.persist(i2);
 
+        bootstrapLocations();
+
         // 7. Create Purchase Orders
         PurchaseOrder po1 = new PurchaseOrder();
         po1.setVendor(maersk);
@@ -195,5 +232,7 @@ public class AdminBootstrapBean {
         return u;
     }
 }
+
+
 
 

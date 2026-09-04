@@ -418,7 +418,7 @@ function showCustToast(message) {
 }
 
 async function apiCall(url, method='GET', body=null) {
-    let opts = { method, headers: { 'Content-Type': 'application/json' } };
+    let opts = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' };
     if(body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
     if(res.status === 401) { window.location.href = CTX + '/login.jsp'; return null; }
@@ -486,29 +486,37 @@ async function loadOrders() {
             }
             let actions = '';
             if (o.status === 'PENDING') {
-                actions += `<button class="btn btn-sm btn-outline-warning me-2" onclick="cancelOrder(\${o.id})">Cancel</button>`;
+                actions += '<button class="btn btn-sm btn-outline-warning me-2" onclick="cancelOrder(' + o.id + ')">Cancel</button>';
             }
             if (o.status === 'CANCELLED') {
-                actions += `<button class="btn btn-sm btn-outline-danger me-2" onclick="deleteOrder(\${o.id})">Delete</button>`;
+                actions += '<button class="btn btn-sm btn-outline-danger me-2" onclick="deleteOrder(' + o.id + ')">Delete</button>';
+            }
+            if (o.status === 'SHIPPED') {
+                actions += '<button class="btn btn-sm btn-success me-2" onclick="markReceived(' + o.id + ')"><i class="bi bi-check-circle me-1"></i>Mark as Received</button>';
             }
             if (o.status === 'DELIVERED') {
-                actions += `<button class="btn btn-sm btn-outline-danger" onclick="openReturnModal(\${o.id})">RMA</button>`;
+                actions += '<button class="btn btn-sm btn-outline-danger" onclick="openReturnModal(' + o.id + ')">RMA</button>';
             }
-            
-            let statusBadge = `<span class="badge bg-secondary">\${o.status.replace(/_/g, ' ')}</span>`;
-            if(o.status === 'DELIVERED') statusBadge = `<span class="badge bg-success">DELIVERED</span>`;
-            if(o.status === 'SHIPPED') statusBadge = `<span class="badge bg-primary">SHIPPED</span>`;
-            
-            newHtml += `
-                <tr>
-                    <td class="fw-bold">\\${o.orderId}</td>
-                    <td>\${o.vendor ? o.vendor.companyName : '-'}</td>
-                    <td>\${o.orderDescription || '-'}</td>
-                    <td>\${statusBadge}</td>
-                    <td>\${o.createdAt ? new Date(o.createdAt.replace('[UTC]', '')).toLocaleDateString() : '-'}</td>
-                    <td class="text-end">\${actions}</td>
-                </tr>
-            `;
+
+            let statusBg = 'secondary';
+            let statusText = o.status.replace(/_/g, ' ');
+            if(o.status === 'DELIVERED') { statusBg = 'success'; }
+            else if(o.status === 'SHIPPED') { statusBg = 'primary'; }
+            else if(o.status === 'PENDING') { statusBg = 'warning text-dark'; }
+            else if(o.status === 'RECEIVED') { statusBg = 'success'; statusText = 'RECEIVED'; }
+            let statusBadge = '<span class="badge bg-' + statusBg + '">' + statusText + '</span>';
+
+            let dateStr = '-';
+            if (o.createdAt) { try { dateStr = new Date(o.createdAt.replace('[UTC]', '')).toLocaleDateString(); } catch(e) {} }
+
+            newHtml += '<tr>' +
+                '<td class="fw-bold">' + (o.orderId || '-') + '</td>' +
+                '<td>' + (o.vendor ? o.vendor.companyName : '-') + '</td>' +
+                '<td>' + (o.orderDescription || '-') + '</td>' +
+                '<td>' + statusBadge + '</td>' +
+                '<td>' + dateStr + '</td>' +
+                '<td class="text-end">' + actions + '</td>' +
+                '</tr>';
         });
         const tbody = document.getElementById('ordersTableBody');
         if (tbody.innerHTML !== newHtml) tbody.innerHTML = newHtml;
@@ -701,6 +709,16 @@ async function deleteOrder(id) {
     if(confirm("Delete this cancelled requisition?")) {
         await apiCall(CTX + '/api/customers/orders/' + id, 'DELETE');
         loadOrders();
+    }
+}
+
+async function markReceived(id) {
+    if(confirm("Confirm that you have received this shipment? This will notify the ops team.")) {
+        const res = await apiCall(CTX + '/api/customers/orders/' + id + '/received', 'PUT');
+        if(res && res.ok) {
+            showCustToast("Order marked as Received! Ops team has been notified.");
+            loadOrders();
+        }
     }
 }
 

@@ -88,6 +88,16 @@
         <li class="nav-item">
             <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories-pane" type="button"><i class="bi bi-tags me-2"></i>Commodity Categories</button>
         </li>
+
+        <li class="nav-item">
+            <button class="nav-link" id="locations-tab" data-bs-toggle="tab" data-bs-target="#locations-pane" type="button"><i class="bi bi-geo-alt me-2"></i>Add countries and regions</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="warehouses-tab" data-bs-toggle="tab" data-bs-target="#warehouses-pane" type="button"><i class="bi bi-building me-2"></i>Add warehouses</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="freight-calc-tab" data-bs-toggle="tab" data-bs-target="#freight-calc-pane" type="button"><i class="bi bi-calculator me-2"></i>Freight Calculator</button>
+        </li>
     </ul>
 
     <div class="tab-content">
@@ -144,7 +154,38 @@
 
         <!-- SHIPMENTS PANE -->
         <div class="tab-pane fade" id="shipments-pane">
-            <div class="table-card">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="table-card bg-white h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h3 class="section-header">Carrier Companies</h3>
+                                <p class="section-sub mb-0">Manage registered shipping partners.</p>
+                            </div>
+                        </div>
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light"><tr><th>Company ID</th><th>Name</th><th>Mother Company Address</th><th class="text-end">Actions</th></tr></thead>
+                            <tbody id="carriersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="table-card bg-white h-100">
+                        <h3 class="section-header" id="carrierFormTitle">Add New Carrier</h3>
+                        <input type="hidden" id="editCarrierId">
+                        <div class="mb-3">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" id="newCarrierName" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mother Company Address</label>
+                            <textarea id="newCarrierAddress" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="d-flex gap-2"><button class="btn btn-primary w-100" id="saveCarrierBtn" onclick="addCarrier()">Register</button><button class="btn btn-secondary w-100 d-none" id="cancelEditCarrierBtn" onclick="cancelEditCarrier()">Cancel</button></div>
+                    </div>
+                </div>
+            </div>
+<div class="table-card">
                 <h3 class="section-header">Active Operations</h3>
                 <p class="section-sub">Assign carriers and track global logistics progress.</p>
                 
@@ -162,8 +203,243 @@
                 </table>
             </div>
         </div>
+
+        <!-- LOCATIONS PANE -->
+        <div class="tab-pane fade" id="locations-pane" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="table-card bg-white h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h3 class="section-header">Countries</h3>
+                                <p class="section-sub mb-0">Manage operating countries.</p>
+                            </div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCountryModal"><i class="bi bi-plus-circle me-1"></i>New Country</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light"><tr><th>ID</th><th>Code</th><th>Name</th></tr></thead>
+                                <tbody id="countriesTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="table-card bg-white h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h3 class="section-header">Regions</h3>
+                                <p class="section-sub mb-0">Manage global regions (e.g., Asia Pacific).</p>
+                            </div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRegionModal"><i class="bi bi-plus-circle me-1"></i>New Region</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light"><tr><th>ID</th><th>Name</th></tr></thead>
+                                <tbody id="regionsTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- WAREHOUSES PANE -->
+        <div class="tab-pane fade" id="warehouses-pane" role="tabpanel">
+            <div class="table-card bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="section-header">Warehouses</h3>
+                        <p class="section-sub mb-0">Manage warehouse facilities.</p>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWarehouseModal" onclick="prepareWarehouseForm()"><i class="bi bi-plus-circle me-1"></i>Add Warehouse</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Address</th>
+                                <th>Location</th>
+                                <th>Manager</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="warehousesTbody">
+                            <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- FREIGHT CALCULATOR PANE -->
+        <div class="tab-pane fade" id="freight-calc-pane" role="tabpanel">
+            <div class="table-card bg-white">
+                <h3 class="section-header"><i class="bi bi-calculator me-2"></i>Freight Cost Calculator</h3>
+                <p class="section-sub">Calculate LCL (Less-than-Container) or FCL (Full Container Load) shipment costs in USD.</p>
+
+                <!-- Mode Selector -->
+                <ul class="nav nav-pills mb-4" id="freightModeTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="lcl-tab" onclick="switchFreightMode('lcl')">
+                            <i class="bi bi-boxes me-1"></i> LCL - Less-than-Container Load
+                        </button>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <button class="nav-link" id="fcl-tab" onclick="switchFreightMode('fcl')">
+                            <i class="bi bi-box-seam me-1"></i> FCL - Full Container Load
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- LCL FORM -->
+                <div id="lcl-form">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Description / Reference</label>
+                            <input type="text" id="lcl-ref" class="form-control" placeholder="e.g. 1 Pallet of Electronics">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Length (m)</label>
+                            <input type="number" id="lcl-length" class="form-control" step="0.01" placeholder="e.g. 1.2">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Width (m)</label>
+                            <input type="number" id="lcl-width" class="form-control" step="0.01" placeholder="e.g. 1.0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Height (m)</label>
+                            <input type="number" id="lcl-height" class="form-control" step="0.01" placeholder="e.g. 1.5">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Actual Weight (kg)</label>
+                            <input type="number" id="lcl-weight" class="form-control" step="0.01" placeholder="e.g. 250">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Freight Rate (USD per CBM)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="lcl-rate-cbm" class="form-control" step="0.01" placeholder="e.g. 150">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Alternate Rate (USD per kg)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="lcl-rate-kg" class="form-control" step="0.0001" placeholder="e.g. 1.50">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary px-4" onclick="calculateLCL()"><i class="bi bi-calculator me-2"></i>Calculate LCL Cost</button>
+                </div>
+
+                <!-- FCL FORM -->
+                <div id="fcl-form" style="display:none;">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Description / Reference</label>
+                            <input type="text" id="fcl-ref" class="form-control" placeholder="e.g. 10,000 pairs of Jeans">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Container Type</label>
+                            <select id="fcl-container" class="form-select">
+                                <option value="20ft">20ft Standard Container (TEU)</option>
+                                <option value="40ft">40ft Standard Container (FEU)</option>
+                                <option value="40hc">40ft High Cube Container</option>
+                                <option value="45hc">45ft High Cube Container</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Route (Origin --- Destination)</label>
+                            <input type="text" id="fcl-route" class="form-control" placeholder="e.g. Shanghai to Los Angeles">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Base Freight Rate (USD)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="fcl-base" class="form-control" step="1" placeholder="e.g. 4500">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">BAF - Bunker Adjustment (USD)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="fcl-baf" class="form-control" step="1" placeholder="e.g. 300">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Port Handling Fees (USD)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="fcl-port" class="form-control" step="1" placeholder="e.g. 0">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">GlobalTrade Markup (USD)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="fcl-markup" class="form-control" step="1" placeholder="e.g. 500">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary px-4" onclick="calculateFCL()"><i class="bi bi-calculator me-2"></i>Calculate FCL Cost</button>
+                </div>
+
+                <!-- RESULT CARD -->
+                <div id="freight-result" class="mt-4" style="display:none;">
+                    <hr>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-receipt me-2"></i>Calculation Breakdown</h5>
+                    <div id="freight-result-body"></div>
+                </div>
+            </div>
+        </div>
+
+        </div></div>  <!-- Add Country Modal -->
+    <div class="modal fade" id="addCountryModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Add Country</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="text" id="countryName" class="form-control mb-2" placeholder="Country Name"/>
+                <input type="text" id="countryCode" class="form-control" placeholder="Country Code (e.g. US, LK)"/>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="addCountry()" data-bs-dismiss="modal">Add</button></div>
+        </div></div>
     </div>
-</div>
+    
+    <!-- Add Region Modal -->
+    <div class="modal fade" id="addRegionModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Add Region</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="text" id="regionName" class="form-control" placeholder="Region Name"/>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="addRegion()" data-bs-dismiss="modal">Add</button></div>
+        </div></div>
+    </div>
+    
+    <!-- Add Warehouse Modal -->
+    <div class="modal fade" id="addWarehouseModal" tabindex="-1">
+        <div class="modal-dialog modal-lg"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Add Warehouse</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12 mb-2"><label class="form-label text-dark fw-bold">Warehouse Name</label><input type="text" id="whName" class="form-control"/></div>
+                    <div class="col-md-6 mb-2"><label class="form-label text-dark fw-bold">Address Line 1</label><input type="text" id="whLine1" class="form-control"/></div>
+                    <div class="col-md-6 mb-2"><label class="form-label text-dark fw-bold">Address Line 2</label><input type="text" id="whLine2" class="form-control"/></div>
+                    <div class="col-md-6 mb-2"><label class="form-label text-dark fw-bold">City</label><input type="text" id="whCity" class="form-control"/></div>
+                    <div class="col-md-6 mb-2"><label class="form-label text-dark fw-bold">State/Province</label><input type="text" id="whState" class="form-control"/></div>
+                    <div class="col-md-6 mb-2"><label class="form-label text-dark fw-bold">Postal Code</label><input type="text" id="whPostal" class="form-control"/></div>
+                    <div class="col-md-6 mb-2"><label class="form-label text-dark fw-bold">Country</label><select id="whCountry" class="form-select" ></select></div>
+                    <div class="col-md-6 mb-2"><label class="form-label text-dark fw-bold">Region</label><select id="whRegion" class="form-select"></select></div>
+                    <div class="col-md-6 mb-2"><label class="form-label text-dark fw-bold">Manager</label><select id="whManager" class="form-select"></select></div>
+                    <div class="col-md-12 mb-2"><label class="form-label text-dark fw-bold">Status</label>
+                        <select id="whActive" class="form-select"><option value="true">Active</option><option value="false">Inactive</option></select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="addWarehouse()" data-bs-dismiss="modal">Add</button></div>
+        </div></div>
+    </div>
 
 <!-- Assign Vendor Modal -->
 <div class="modal fade" id="assignVendorModal" tabindex="-1">
@@ -229,268 +505,73 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-const CTX = '${pageContext.request.contextPath}';
-let vendorModal, carrierModal;
-let knownOrderIds = new Set();
-let currentOpsOrders = [];
-
-function viewOrderDetails(idStr) {
-    const id = parseInt(idStr);
-    const o = currentOpsOrders.find(x => x.id === id);
-    if(!o) return;
-    document.getElementById('opsOrdId').innerText = '#' + o.orderId;
-    document.getElementById('opsOrdCustomer').innerText = o.customerFullName;
-    document.getElementById('opsOrdMobile').innerText = o.mobileNumber || '-';
-    document.getElementById('opsOrdDesc').innerText = o.description || '-';
-    document.getElementById('opsOrdDesign').innerHTML = o.designDocumentUrl ? '<a href="' + o.designDocumentUrl + '" target="_blank">View Design Doc</a>' : 'N/A';
-    document.getElementById('opsOrdQuality').innerHTML = o.qualityStandardUrl ? '<a href="' + o.qualityStandardUrl + '" target="_blank">View Quality Standards</a>' : 'N/A';
-    
-    document.getElementById('opsOrdDecision').innerText = o.vendorDecision || 'PENDING';
-    document.getElementById('opsOrdReason').innerText = o.vendorReason || '-';
-    document.getElementById('opsOrdDate').innerText = o.vendorProposedDate || '-';
-    
-    new bootstrap.Modal(document.getElementById('opsOrderModal')).show();
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">// ==================== FREIGHT CALCULATOR ====================
+function switchFreightMode(mode) {
+    document.getElementById('lcl-form').style.display = mode === 'lcl' ? '' : 'none';
+    document.getElementById('fcl-form').style.display = mode === 'fcl' ? '' : 'none';
+    document.getElementById('lcl-tab').classList.toggle('active', mode === 'lcl');
+    document.getElementById('fcl-tab').classList.toggle('active', mode === 'fcl');
+    document.getElementById('freight-result').style.display = 'none';
 }
-let firstLoad = true;
-let opsPollingInterval;
+function usd(n) { return 'USD ' + Number(n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+function calcRow(label, value, hi) { return '<tr class="' + (hi ? 'table-success fw-bold' : '') + '"><td>' + label + '</td><td class="text-end">' + value + '</td></tr>'; }
 
-function showToast(message) {
-    document.getElementById('opsToastBody').innerText = message;
-    const toast = new bootstrap.Toast(document.getElementById('opsToast'));
-    toast.show();
-}
-
-async function apiCall(url, method='GET', body=null) {
-    let opts = { method, headers: { 'Content-Type': 'application/json' } };
-    if(body) opts.body = JSON.stringify(body);
-    const res = await fetch(url, opts);
-    if(res.status === 401) { window.location.href = CTX + '/login.jsp'; return null; }
-    return res;
-}
-
-async function doLogout() {
-    await apiCall(CTX+'/api/auth/logout', 'POST');
-    window.location.href = CTX+'/login.jsp';
+function calculateLCL() {
+    var L = parseFloat(document.getElementById('lcl-length').value) || 0;
+    var W = parseFloat(document.getElementById('lcl-width').value) || 0;
+    var H = parseFloat(document.getElementById('lcl-height').value) || 0;
+    var kg = parseFloat(document.getElementById('lcl-weight').value) || 0;
+    var rCBM = parseFloat(document.getElementById('lcl-rate-cbm').value) || 0;
+    var rKg = parseFloat(document.getElementById('lcl-rate-kg').value) || 0;
+    var ref = document.getElementById('lcl-ref').value || 'LCL Shipment';
+    if (!L || !W || !H || !kg || !rCBM) { alert('Please fill in all required fields.'); return; }
+    var vol = L * W * H;
+    var volKg = vol * 1000;
+    var charKg = Math.max(kg, volKg);
+    var charCBM = charKg / 1000;
+    var useVol = volKg > kg;
+    var price = charCBM * rCBM;
+    var altPrice = rKg > 0 ? (kg * rKg) : null;
+    var html = '<div class="table-responsive"><table class="table table-bordered align-middle"><thead class="table-light"><tr><th>Calculation Step</th><th class="text-end">Value</th></tr></thead><tbody>' +
+        calcRow('Reference', ref, false) +
+        calcRow('Dimensions (L x W x H)', L + 'm x ' + W + 'm x ' + H + 'm', false) +
+        calcRow('Actual Weight', kg.toLocaleString() + ' kg', false) +
+        calcRow('Step 1 - Actual Volume = ' + L + ' x ' + W + ' x ' + H, vol.toFixed(4) + ' CBM', false) +
+        calcRow('Step 2 - Volumetric Weight (1 CBM = 1,000 kg) = ' + vol.toFixed(4) + ' x 1000', volKg.toLocaleString() + ' kg', false) +
+        calcRow('Step 3 - Chargeable Weight (' + (useVol ? 'Volumetric ' + volKg.toLocaleString() + ' kg > Actual ' + kg + ' kg' : 'Actual ' + kg + ' kg > Volumetric ' + volKg.toLocaleString() + ' kg') + ')', charKg.toLocaleString() + ' kg = ' + charCBM.toFixed(4) + ' CBM', true) +
+        calcRow('Freight Rate', usd(rCBM) + ' per CBM', false) +
+        calcRow('Step 4 - Final Price = ' + charCBM.toFixed(4) + ' CBM x ' + usd(rCBM), usd(price), true);
+    if (altPrice !== null) html += calcRow('Alternative (per kg): ' + kg + ' kg x ' + usd(rKg), usd(altPrice), false);
+    html += '</tbody></table></div><div class="alert alert-success mt-3 fs-5"><strong>Final Chargeable Amount: </strong><span class="fw-bold ms-2">' + usd(price) + '</span></div>';
+    document.getElementById('freight-result-body').innerHTML = html;
+    document.getElementById('freight-result').style.display = '';
 }
 
-async function loadCategories() {
-    const res = await apiCall(CTX + '/api/ops/categories');
-    if(res && res.ok) {
-        const d = await res.json();
-        let newHtml = '';
-        d.data.forEach(c => {
-            newHtml += '<tr>' +
-                    '<td class="fw-bold">CAT-' + c.id + '</td>' +
-                    '<td>' + c.name + '</td>' +
-                    '<td>' + (c.description || '-') + '</td>' +
-                    '<td class="text-end text-nowrap">' + '<button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(' + c.id + ')"><i class="bi bi-trash"></i></button>' +
-                    '</td>' +
-                '</tr>';
-        });
-        if (d.data.length === 0) newHtml = '<tr><td colspan="4" class="text-center text-muted">No categories found.</td></tr>';
-        const tbody = document.getElementById('categoriesTbody');
-        if (tbody && tbody.innerHTML !== newHtml) { tbody.innerHTML = newHtml; }
-    }
+function calculateFCL() {
+    var ref = document.getElementById('fcl-ref').value || 'FCL Shipment';
+    var contSel = document.getElementById('fcl-container');
+    var cont = contSel.options[contSel.selectedIndex].text;
+    var route = document.getElementById('fcl-route').value || 'N/A';
+    var base = parseFloat(document.getElementById('fcl-base').value) || 0;
+    var baf = parseFloat(document.getElementById('fcl-baf').value) || 0;
+    var port = parseFloat(document.getElementById('fcl-port').value) || 0;
+    var markup = parseFloat(document.getElementById('fcl-markup').value) || 0;
+    if (!base) { alert('Please enter the Base Freight Rate.'); return; }
+    var total = base + baf + port + markup;
+    var html = '<div class="table-responsive"><table class="table table-bordered align-middle"><thead class="table-light"><tr><th>Component</th><th class="text-end">Amount (USD)</th></tr></thead><tbody>' +
+        calcRow('Reference', ref, false) +
+        calcRow('Container Type', cont, false) +
+        calcRow('Route', route, false) +
+        calcRow('Base Freight Rate', usd(base), false) +
+        calcRow('BAF - Bunker Adjustment Factor (Fuel Surcharge)', usd(baf), false) +
+        calcRow('Port Handling Fees', usd(port), false) +
+        calcRow('GlobalTrade Markup', usd(markup), false) +
+        calcRow('TOTAL = ' + usd(base) + ' + ' + usd(baf) + ' + ' + usd(port) + ' + ' + usd(markup), usd(total), true) +
+        '</tbody></table></div><div class="alert alert-success mt-3 fs-5"><strong>Final FCL Cost: </strong><span class="fw-bold ms-2">' + usd(total) + '</span></div>';
+    document.getElementById('freight-result-body').innerHTML = html;
+    document.getElementById('freight-result').style.display = '';
 }
-async function createCategory() {
-    const name = document.getElementById('catName').value;
-    const desc = document.getElementById('catDesc').value;
-    if(!name) return;
-    await apiCall(CTX + '/api/ops/categories', 'POST', { name: name, description: desc });
-    bootstrap.Modal.getInstance(document.getElementById('createCategoryModal')).hide();
-    document.getElementById('catName').value = '';
-    document.getElementById('catDesc').value = '';
-    loadCategories();
-}
-async function deleteCategory(id) {
-    if(!confirm('Are you sure you want to delete this category?')) return;
-    await apiCall(CTX + '/api/ops/categories/' + id, 'DELETE');
-    loadCategories();
-}
-
-async function loadOps() {
-    await loadOrders();
-    await loadShipments();
-            loadCategories();
-    await loadCategories();
-    firstLoad = false;
-    
-    // Start real-time polling every 3 seconds
-    if (!opsPollingInterval) {
-        opsPollingInterval = setInterval(() => {
-            loadOrders();
-            loadShipments();
-            loadCategories();
-        }, 3000);
-    }
-}
-
-async function loadOrders() {
-    const res = await apiCall(CTX + '/api/ops/orders');
-    if(res && res.ok) {
-        const d = await res.json();
-        let newHtml = '';
-        let currentIds = new Set();
-        currentOpsOrders = d.data;
-        d.data.forEach(o => {
-            currentIds.add(o.id);
-            if (!firstLoad && !knownOrderIds.has(o.id)) {
-                showToast("Real-Time Alert: New Client Requisition Received! (Order #" + o.orderId + ")");
-            }
-            
-            let decisionHtml = '';
-            if (o.vendor) {
-                const dec = o.vendorDecision || 'PENDING';
-                let bg = 'secondary';
-                if(dec === 'ACCEPTED') bg = 'success';
-                else if(dec === 'REJECTED') bg = 'danger';
-                else if(dec === 'PROPOSED_DATE') bg = 'warning';
-                
-                decisionHtml = '<span class="badge bg-'+bg+'">'+dec+'</span>';
-                if(dec === 'REJECTED' || dec === 'PROPOSED_DATE') {
-                    if (!firstLoad && (!knownOrderIds.has(o.id + '_' + dec))) {
-                        showToast("Real-Time Alert: Vendor responded to Order #" + o.orderId + " with " + dec);
-                    }
-                    knownOrderIds.add(o.id + '_' + dec);
-                }
-            }
-            
-            let acts = '';
-            if (o.vendor) {
-                acts = '<button class="btn btn-sm btn-outline-info" onclick="viewOrderDetails(\''+o.id+'\')">View</button>' ;
-                if (o.vendorDecision === 'REJECTED' || o.vendorDecision === 'PROPOSED_DATE') {
-                    acts += '<button class="btn btn-sm btn-outline-primary ms-1" onclick="openVendorModal('+o.id+')">Reassign</button>';
-                }
-            } else {
-                acts = '<button class="btn btn-sm btn-outline-primary" onclick="openVendorModal('+o.id+')">Assign Vendor</button>';
-                acts += '<button class="btn btn-sm btn-outline-info ms-1" onclick="viewOrderDetails(\''+o.id+'\')">View</button>';
-            }
-            
-            let statusHtml = "";
-            if (o.status && o.status !== "PENDING" && o.status !== "IN_PROGRESS") {
-                statusHtml = "<br><span class=\"badge bg-info text-dark\">" + o.status.replace(/_/g, " ") + "</span>";
-            }
-            let vend = o.vendor ? o.vendor.companyName + "<br>" + decisionHtml + statusHtml : "<span class=\"text-warning\">Unassigned</span>";
-            
-            if (o.status === "READY_FOR_DELIVERY") {
-                acts += "<button class=\"btn btn-sm btn-primary ms-1\" onclick=\"assignCarrierPrompt(" + o.id + ")\">Assign Carrier</button>";
-            } else if (o.status === "ORDER_COMPLETED" || o.status === "IN_WAREHOUSE") {
-                if (!o.assignedWarehouse) {
-                    acts += "<button class=\"btn btn-sm btn-secondary ms-1\" onclick=\"assignWarehousePrompt(" + o.id + ")\">Assign Warehouse</button>";
-                }
-            }
-            
-            newHtml += "<tr>" +
-                    "<td class=\"fw-bold\">" + o.orderId + "</td>" +
-                    "<td>" + o.customerFullName + "</td>" +
-                    "<td>" + (o.itemCount || "-") + "</td>" +
-                    "<td>" + (o.weight ? o.weight + " kg" : "-") + "</td>" +
-                    "<td>" + (o.expectedTimeline || "-") + "</td>" +
-                    "<td class=\"fw-bold\">" + vend + "</td>" +
-                    "<td class=\"text-end text-nowrap\">" + acts + "</td>" +
-                "</tr>";
-        });
-        
-        knownOrderIds = currentIds;
-        
-        const tbody = document.getElementById('ordersBody');
-        if (tbody.innerHTML !== newHtml) {
-            tbody.innerHTML = newHtml;
-        }
-    }
-}
-
-async function loadShipments() {
-    const res = await apiCall(CTX + '/api/ops/shipments');
-    if(res && res.ok) {
-        const d = await res.json();
-        let newHtml = '';
-        d.data.forEach(s => {
-            let carr = s.carrierName ? s.carrierName : '<span class="text-danger small fw-bold">NO CARRIER</span>';
-            let stat = '<span class="badge bg-secondary">' + s.status.replace(/_/g, ' ') + '</span>';
-            if(s.status === 'DELIVERED') stat = '<span class="badge bg-success">DELIVERED</span>';
-            if(s.status === 'SHIPPED') stat = '<span class="badge bg-primary">SHIPPED</span>';
-            
-            newHtml += '<tr>' +
-                    '<td class="fw-bold">' + s.trackingNumber + '</td>' +
-                    '<td>' + (s.origin || '-') + ' &rarr; ' + (s.destination || '-') + '</td>' +
-                    '<td>' + stat + '</td>' +
-                    '<td class="fw-bold text-dark">' + carr + '</td>' +
-                    '<td class="text-end text-nowrap">' + '<button class="btn btn-sm btn-outline-dark" onclick="openCarrierModal('+s.id+', \''+(s.carrierName||'')+'\', \''+s.status+'\')">Manage</button>' +
-                    '</td>' +
-                '</tr>';
-        });
-        
-        const tbody = document.getElementById('shipmentsBody');
-        if (tbody.innerHTML !== newHtml) {
-            tbody.innerHTML = newHtml;
-        }
-    }
-}
-
-async function assignWarehousePrompt(id) {
-    let w = prompt("Enter Warehouse Name to assign:");
-    if(w) {
-        await apiCall(CTX + '/api/ops/orders/' + id + '/assign-warehouse', 'PUT', {warehouseName: w});
-        loadOrders();
-    }
-}
-async function assignCarrierPrompt(id) {
-    let c = prompt("Enter Carrier Name to assign:");
-    if(c) {
-        await apiCall(CTX + '/api/ops/orders/' + id + '/assign-carrier', 'PUT', {carrierName: c});
-        loadOrders();
-    }
-}
-async function openVendorModal(orderId) {
-    document.getElementById('assignOrderId').value = orderId;
-    const res = await apiCall(CTX + '/api/ops/vendors');
-    if(res && res.ok) {
-        const d = await res.json();
-        const sel = document.getElementById('vendorSelect');
-        sel.innerHTML = '<option value="">Select Vendor...</option>';
-        d.data.forEach(v => {
-            sel.innerHTML += '<option value="'+v.id+'">'+v.companyName+'</option>';
-        });
-    }
-    if(!vendorModal) vendorModal = new bootstrap.Modal(document.getElementById('assignVendorModal'));
-    vendorModal.show();
-}
-
-async function submitVendorAssign() {
-    const oid = document.getElementById('assignOrderId').value;
-    const vid = document.getElementById('vendorSelect').value;
-    if(!vid) return;
-    
-    await apiCall(CTX + '/api/ops/orders/'+oid+'/assign?vendorId='+vid, 'PUT');
-    vendorModal.hide();
-    loadOrders();
-}
-
-function openCarrierModal(shipId, currentCarrier, currentStatus) {
-    document.getElementById('manageShipmentId').value = shipId;
-    document.getElementById('carrierInput').value = currentCarrier;
-    document.getElementById('statusSelect').value = currentStatus;
-    if(!carrierModal) carrierModal = new bootstrap.Modal(document.getElementById('carrierModal'));
-    carrierModal.show();
-}
-
-async function submitLogisticsUpdate() {
-    const sid = document.getElementById('manageShipmentId').value;
-    const carr = document.getElementById('carrierInput').value;
-    const stat = document.getElementById('statusSelect').value;
-    
-    if(carr) await apiCall(CTX + '/api/ops/shipments/'+sid+'/carrier?carrier='+encodeURIComponent(carr), 'PUT');
-    await apiCall(CTX + '/api/ops/shipments/'+sid+'/status?status='+encodeURIComponent(stat), 'PUT');
-    
-    carrierModal.hide();
-    loadShipments();
-            loadCategories();
-}
-
-document.addEventListener('DOMContentLoaded', loadOps);
+// ==================== END FREIGHT CALCULATOR ====================
 </script>
 <!-- View Order Details Modal -->
 <div class="modal fade" id="opsOrderModal" tabindex="-1">
@@ -513,6 +594,11 @@ document.addEventListener('DOMContentLoaded', loadOps);
                 <p><strong>Decision:</strong> <span id="opsOrdDecision"></span></p>
                 <p><strong>Reason/Note:</strong> <span id="opsOrdReason"></span></p>
                 <p><strong>Proposed Date:</strong> <span id="opsOrdDate"></span></p>
+
+                <h6 class="fw-bold mt-3 border-top pt-3">Logistics</h6>
+                <p><strong>Carrier:</strong> <span id="opsOrdCarrier"></span></p>
+                <p><strong>Dimensions:</strong> <span id="opsOrdDims"></span></p>
+                <p><strong>Shipment Date/Time:</strong> <span id="opsOrdDateTime"></span></p>
             </div>
         </div>
     </div>
@@ -543,8 +629,71 @@ document.addEventListener('DOMContentLoaded', loadOps);
     </div>
   </div>
 </div>
+
+<!-- Assign Warehouse Modal -->
+<div class="modal fade" id="assignWarehouseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Warehouse</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignWhOrderId">
+                <div class="mb-3">
+                    <label class="form-label">Select Warehouse</label>
+                    <select id="assignWhSelect" class="form-select">
+                        <option value="">Loading warehouses...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitWarehouseAssign()">Assign & Notify Vendor</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Carrier Modal -->
+<div class="modal fade" id="assignCarrierModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Carrier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignCarrierOrderId">
+                <div class="mb-3">
+                    <label class="form-label">Carrier Company</label>
+                    <select id="assignCarrierSelect" class="form-select"></select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Order Dimensions (LxWxH or Vol.)</label>
+                    <input type="text" id="assignCarrierDimensions" class="form-control" placeholder="e.g. 50x40x30 cm">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Shipment Date & Time</label>
+                    <input type="datetime-local" id="assignCarrierDateTime" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitCarrierAssign()">Assign Carrier</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
