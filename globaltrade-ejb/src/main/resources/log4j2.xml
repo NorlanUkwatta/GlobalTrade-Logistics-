@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Log4j 2 Configuration for GlobalTrade Logistics Platform
+    =========================================================
+    Three appenders:
+      1. Console     — Development: coloured pattern output to stdout
+      2. Application — Rolling file log: all levels >= INFO (30-day retention)
+      3. Audit       — Dedicated AUDIT_LOG file: captures every @LogisticsAudit event
+                       This is legally significant — never discard without compliance review.
+
+    Log Levels by package:
+      - com.globaltrade.logistics         -> DEBUG (full platform trace in dev)
+      - org.hibernate.SQL                 -> WARN  (suppress routine SQL in logs)
+      - org.hibernate.type.descriptor    -> WARN
+      - jakarta                           -> WARN
+      - com.sun                           -> WARN
+-->
+<Configuration status="WARN">
+
+    <Properties>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="APP_LOG_FILE">${LOG_DIR}/globaltrade-app.log</Property>
+        <Property name="AUDIT_LOG_FILE">${LOG_DIR}/globaltrade-audit.log</Property>
+
+        <!-- Detailed pattern for application logs -->
+        <Property name="APP_PATTERN">
+            %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n%throwable
+        </Property>
+
+        <!-- Compact pattern for audit logs (machine-parseable) -->
+        <Property name="AUDIT_PATTERN">
+            %d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} | AUDIT | %msg%n
+        </Property>
+
+        <!-- Console pattern with ANSI colour codes -->
+        <Property name="CONSOLE_PATTERN">
+            %style{%d{HH:mm:ss}}{dim} %highlight{%-5level}{FATAL=red blink, ERROR=red, WARN=yellow, INFO=green, DEBUG=cyan} %style{[%t]}{dim} %style{%logger{30}}{blue} - %msg%n%throwable
+        </Property>
+    </Properties>
+
+    <Appenders>
+
+        <!-- ── Console (Development / Debugging) ── -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${CONSOLE_PATTERN}" disableAnsi="false"/>
+            <ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+        </Console>
+
+        <!-- ── Application Rolling File ── -->
+        <RollingFile name="ApplicationFile"
+                     fileName="${APP_LOG_FILE}"
+                     filePattern="${LOG_DIR}/globaltrade-app-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${APP_PATTERN}"/>
+            <Policies>
+                <!-- Roll over at midnight -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- Also roll when file exceeds 50 MB -->
+                <SizeBasedTriggeringPolicy size="50MB"/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <!-- Keep 30 days of compressed logs -->
+                <Delete basePath="${LOG_DIR}" maxDepth="1">
+                    <IfFileName glob="globaltrade-app-*.log.gz"/>
+                    <IfLastModified age="30d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- ── Audit Rolling File (legally significant — 365-day retention) ── -->
+        <RollingFile name="AuditFile"
+                     fileName="${AUDIT_LOG_FILE}"
+                     filePattern="${LOG_DIR}/globaltrade-audit-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${AUDIT_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${LOG_DIR}" maxDepth="1">
+                    <IfFileName glob="globaltrade-audit-*.log.gz"/>
+                    <IfLastModified age="365d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+
+        <!-- Platform loggers -->
+        <Logger name="com.globaltrade.logistics" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationFile"/>
+        </Logger>
+
+        <!-- Dedicated audit logger — referenced in LogisticsAuditInterceptor -->
+        <Logger name="com.globaltrade.logistics.AUDIT" level="INFO" additivity="false">
+            <AppenderRef ref="AuditFile"/>
+            <AppenderRef ref="ApplicationFile"/>
+        </Logger>
+
+        <!-- Timer service logger -->
+        <Logger name="com.globaltrade.logistics.timer" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationFile"/>
+        </Logger>
+
+        <!-- Suppress noisy third-party loggers -->
+        <Logger name="org.hibernate"                           level="WARN"/>
+        <Logger name="org.hibernate.SQL"                       level="WARN"/>
+        <Logger name="org.hibernate.type.descriptor"           level="WARN"/>
+        <Logger name="org.hibernate.orm.connections.pooling"   level="WARN"/>
+        <Logger name="com.sun"                                 level="WARN"/>
+        <Logger name="jakarta"                                 level="WARN"/>
+        <Logger name="io.jsonwebtoken"                         level="WARN"/>
+
+        <!-- Root — catch everything else at WARN level -->
+        <Root level="WARN">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ApplicationFile"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>

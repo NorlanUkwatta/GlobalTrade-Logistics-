@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="3.0" xmlns="https://jakarta.ee/xml/ns/persistence">
+    <persistence-unit name="GlobalTradeLogisticsPU" transaction-type="JTA">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <jta-data-source>jdbc/GlobalTradeDS</jta-data-source>
+        <class>com.globaltrade.logistics.entity.User</class>
+        <class>com.globaltrade.logistics.entity.AuditLog</class>
+        <class>com.globaltrade.logistics.entity.Vendor</class>
+        <class>com.globaltrade.logistics.entity.Container</class>
+        <class>com.globaltrade.logistics.entity.Shipment</class>
+        <class>com.globaltrade.logistics.entity.TrackingEvent</class>
+        <class>com.globaltrade.logistics.entity.CustomsDeclaration</class>
+        <class>com.globaltrade.logistics.entity.InventoryItem</class>
+        <class>com.globaltrade.logistics.entity.PurchaseOrder</class>
+        <class>com.globaltrade.logistics.entity.AdvancedShippingNotice</class>
+        <class>com.globaltrade.logistics.entity.PaymentSettlement</class>
+        <class>com.globaltrade.logistics.entity.ComplianceDocument</class>
+        <class>com.globaltrade.logistics.entity.CommodityCategory</class>
+        <class>com.globaltrade.logistics.entity.Country</class>
+        <class>com.globaltrade.logistics.entity.Region</class>
+        <class>com.globaltrade.logistics.entity.Warehouse</class>
+                <class>com.globaltrade.logistics.entity.CustomerBill</class>
+        <class>com.globaltrade.logistics.entity.PlatformSubscription</class>
+        <properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <property name="hibernate.transaction.jta.platform" value="org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.jdbc.batch_size" value="25"/>
+            <property name="hibernate.order_inserts" value="true"/>
+            <property name="hibernate.order_updates" value="true"/>
+            <property name="hibernate.jdbc.time_zone" value="UTC"/>
+        </properties>
+    </persistence-unit>
+</persistence>
+
+

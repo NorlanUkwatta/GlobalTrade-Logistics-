@@ -1,0 +1,46 @@
+<%--
+    JSP Coda Fragment - included automatically after every *.jsp page.
+    Contains Bootstrap JS bundle and common scripts.
+--%>
+    <!-- Bootstrap 5 JS Bundle (Popper included) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmW84+z5aWf/7RKSPqq7HmGUYGD"
+            crossorigin="anonymous"></script>
+
+    <!-- Common scripts: read JWT from cookie, expose as JS variable -->
+    <script>
+    // - Global Utility: read a cookie by name -
+    function getCookie(name) {
+        const value = `; \${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    // - Global fetch helper that adds auth header from cookie -
+    async function apiCall(url, method = 'GET', body = null) {
+        const token = getCookie('auth_token');
+        const opts = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+            }
+        };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(url, opts);
+        if (res.status === 401) {
+            window.location.href = '${pageContext.request.contextPath}/login.jsp';
+            return null;
+        }
+        return res;
+    }
+
+    // - Logout handler -
+    async function doLogout() {
+        await apiCall('${pageContext.request.contextPath}/api/auth/logout', 'POST');
+        window.location.href = '${pageContext.request.contextPath}/login.jsp';
+    }
+    </script>
+</body>
+</html>
